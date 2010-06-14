@@ -1,3 +1,10 @@
+``multidb`` provides two Django database routers useful in master-slave
+deployments.
+
+
+MasterSlaveRouter
+-----------------
+
 With ``multidb.MasterSlaveRouter`` all read queries will go to a slave
 database;  all inserts, updates, and deletes will do to the ``default``
 database.
@@ -25,3 +32,57 @@ If you want to get a connection to a slave in your app, use
     import multidb
 
     connection = connections[multidb.get_slave()]
+
+
+PinningMasterSlaveRouter
+------------------------
+
+In some applications, the lag between the master receiving a write and its
+replication to the slaves is enough to cause inconsistency for the end user.
+For example, imagine a scenario with 1 second of replication lag. If a user
+makes a forum post (to the master) and then is redirected to a fully-rendered
+view of it (from a slave) 500ms later, the view will fail. If this is a problem
+in your application, consider using ``multidb.PinningMasterSlaveRouter``. This
+router works in combination with ``multidb.middleware.PinningRouterMiddleware``
+to assure that, after writing to the ``default`` database, future reads from
+the same user agent are directed to the ``default`` database for a configurable
+length of time.
+
+Caveats
+=======
+
+``PinningRouterMiddleware`` identifies database writes solely by request type,
+assuming that any ``POST`` request is a write.
+
+This package makes no attempt to redirect database activity that occurs after a
+write but during the same request. You application is responsible for manually
+directing such activity to ``default`` with, for instance, the ``using`` method
+or keyword argument.
+
+Configuration
+=============
+
+To use ``PinningMasterSlaveRouter``, put it into ``DATABASE_ROUTERS`` in your
+settings::
+
+    DATABASE_ROUTERS = ('multidb.PinningMasterSlaveRouter',)
+
+Then, install the middleware. It must be listed before any other middleware
+which performs database writes::
+
+    MIDDLEWARE_CLASSES = (
+        'multidb.middleware.PinningRouterMiddleware',
+        ...more middleware here...
+    )
+
+``PinningRouterMiddleware`` attaches a cookie to any user agent who has just
+written. The cookie should be set to expire at a time longer than your
+replication lag. By default, its value is a conservative 15 seconds, but it can
+be adjusted like so::
+
+    MULTIDB_PINNING_SECONDS = 5
+
+If you need to change the name of the cookie, use the ``MULTIDB_PINNING_COOKIE``
+setting::
+
+    MULTIDB_PINNING_COOKIE = 'multidb_pin_writes'

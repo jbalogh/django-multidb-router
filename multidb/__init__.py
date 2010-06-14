@@ -31,8 +31,8 @@ import itertools
 import random
 
 from django.conf import settings
-from django.utils.thread_support import currentThread
-from django.core.signals import post_save, post_delete, request_started
+
+from .pinning import this_thread_is_pinned
 
 
 DEFAULT_DB_ALIAS = 'default'
@@ -55,29 +55,6 @@ def get_slave():
     return slaves.next()
 
 
-_requests = {}
-
-
-def get_written():
-    return _requests.get(currentThread())
-
-
-def set_written():
-    _requests[currentThread()] = True
-
-
-def clear_written():
-    try:
-        del _requests[currentThread()]
-    except KeyError:
-        pass
-
-
-request_started.connections(clear_written)
-post_save.connect(set_written)
-post_delete.connect(set_written)
-
-
 class MasterSlaveRouter(object):
     """Router that sends all reads to a slave, all writes to default."""
 
@@ -98,14 +75,16 @@ class MasterSlaveRouter(object):
         return db == DEFAULT_DB_ALIAS
 
 
-class StickyMasterSlaveRouter(MasterSlaveRouter):
-    """Sends all reads to a slave unless there has already been a write,
-    then sends reads to the master for the remainder of the request."""
+class PinningMasterSlaveRouter(MasterSlaveRouter):
+    """Router that sends reads to master iff a certain flag is set. Writes
+    always go to master.
 
+    Typically, we set a cookie in middleware when the request is a POST and
+    give it a max age that's certain to be longer than the replication lag. The
+    flag comes from that cookie.
+
+    """
     def db_for_read(self, model, **hints):
-        """Send reads to slaves in round-robin, unless there has been a
-        write."""
-
-        if get_written():
-            return DEFAULT_DB_ALIAS
-        return get_slave()
+        """Send reads to slaves in round-robin unless this thread is "stuck" to
+        the master."""
+        return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
