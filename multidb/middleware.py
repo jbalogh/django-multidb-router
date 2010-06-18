@@ -27,16 +27,11 @@ class PinningRouterMiddleware(object):
     def process_request(self, request):
         """Set the thread's pinning flag according to the presence of the
         incoming cookie."""
-        if PINNING_COOKIE in request.COOKIES:
+        if PINNING_COOKIE in request.COOKIES or request.method == 'POST':
             pin_this_thread()
         else:
             # In case the last request this thread served was pinned:
             unpin_this_thread()
-
-        # We could also set the pinning flag at the top of POST requests.
-        # But, at the moment, we rely on ourselves to be smart enough to
-        # manually direct the necessary requests to the master within the scope
-        # of one request. Too optimistic?
 
     def process_response(self, request, response):
         """On a POST request, assume there was a DB write and set the cookie.

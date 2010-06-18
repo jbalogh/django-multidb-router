@@ -79,30 +79,39 @@ class PinningTests(UnpinningTestCase):
 class MiddlewareTests(UnpinningTestCase):
     """Tests for the middleware that supports pinning"""
 
-    def test_process_request(self):
-        """Make sure the thread gets set as pinned when the cookie is on the
-        request and as unpinned when it isn't."""
-        request = HttpRequest()
-        request.COOKIES[PINNING_COOKIE] = 'y'
+    def setUp(self):
+        super(MiddlewareTests, self).setUp()
 
-        middleware = PinningRouterMiddleware()
-        middleware.process_request(request)
+        # Every test uses these, so they're okay as attrs.
+        self.request = HttpRequest()
+        self.middleware = PinningRouterMiddleware()
+
+    def test_pin_on_cookie(self):
+        """Thread should pin when the cookie is set."""
+        self.request.COOKIES[PINNING_COOKIE] = 'y'
+        self.middleware.process_request(self.request)
         assert this_thread_is_pinned()
 
-        del request.COOKIES[PINNING_COOKIE]
-        middleware.process_request(request)
+    def test_unpin_on_no_cookie(self):
+        """Thread should unpin when cookie is absent and method isn't POST."""
+        pin_this_thread()
+        self.middleware.process_request(self.request)
         assert not this_thread_is_pinned()
+
+    def test_pin_on_post(self):
+        """Thread should pin when method is POST."""
+        self.request.method = 'POST'
+        self.middleware.process_request(self.request)
+        assert this_thread_is_pinned()
 
     def test_process_response(self):
         """Make sure the cookie gets set on POST requests and not otherwise."""
-        request = HttpRequest()
-        middleware = PinningRouterMiddleware()
 
-        response = middleware.process_response(request, HttpResponse())
+        response = self.middleware.process_response(self.request, HttpResponse())
         assert PINNING_COOKIE not in response.cookies
 
-        request.method = 'POST'
-        response = middleware.process_response(request, HttpResponse())
+        self.request.method = 'POST'
+        response = self.middleware.process_response(self.request, HttpResponse())
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
             PINNING_SECONDS)
