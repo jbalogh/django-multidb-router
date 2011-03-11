@@ -8,7 +8,7 @@ from multidb import (DEFAULT_DB_ALIAS, MasterSlaveRouter,
 from multidb.middleware import (PINNING_COOKIE, PINNING_SECONDS,
     PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned,
-    pin_this_thread, unpin_this_thread)
+    pin_this_thread, unpin_this_thread, use_master)
 
 
 class UnpinningTestCase(TestCase):
@@ -115,3 +115,48 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
             PINNING_SECONDS)
+
+
+class ContextDecoratorTests(TestCase):
+    def test_decorator(self):
+        @use_master
+        def check():
+            assert this_thread_is_pinned()
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        check()
+        assert not this_thread_is_pinned()
+
+    def test_decorator_resets(self):
+        @use_master
+        def check():
+            assert this_thread_is_pinned()
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        check()
+        assert this_thread_is_pinned()
+
+    def test_context_manager(self):
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        with use_master:
+            assert this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+
+    def text_context_manager_resets(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with use_master:
+            assert this_thread_is_pinned()
+        assert this_thread_is_pinned()
+
+    def test_context_manager_exception(self):
+        unpin_this_thread()
+        try:
+            assert not this_thread_is_pinned()
+            with use_master:
+                assert this_thread_is_pinned()
+                raise ValueError
+        except ValueError:
+            pass
+        assert not this_thread_is_pinned()

@@ -86,3 +86,24 @@ If you need to change the name of the cookie, use the ``MULTIDB_PINNING_COOKIE``
 setting::
 
     MULTIDB_PINNING_COOKIE = 'multidb_pin_writes'
+
+
+``use_master``
+==============
+
+``multidb.pinning.use_master`` is both a context manager and a decorator for
+wrapping code to use the master database. You can use it as a context manager::
+
+    from multidb.pinning import use_master
+
+    with use_master:
+        touch_the_database()
+    touch_another_database()
+
+or as a decorator::
+
+    from multidb.pinning import use_master
+
+    @use_master
+    def func(*args, **kw):
+        """Touches the master database."""
