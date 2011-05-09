@@ -32,7 +32,7 @@ import random
 
 from django.conf import settings
 
-from .pinning import this_thread_is_pinned
+from .pinning import pin_this_thread, this_thread_is_pinned, PIN_WRITE
 
 
 DEFAULT_DB_ALIAS = 'default'
@@ -88,3 +88,7 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
         """Send reads to slaves in round-robin unless this thread is "stuck" to
         the master."""
         return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
+
+    def db_for_write(self, *args, **kw):
+        pin_this_thread(PIN_WRITE)
+        return super(PinningMasterSlaveRouter, self).db_for_write(*args, **kw)

@@ -5,22 +5,29 @@ from functools import wraps
 import threading
 
 
-__all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
-           'use_master']
-
-
+"""
+These constants give a reason why a thread was pinned.
+* PIN_NONE - It wasn't pinned.
+* PIN_POST - The request was a POST.
+* PIN_WRITE - There was a DB write.
+It's important to distinguish these so we can decide whether or not we need
+to re-set the pinning cookie or we can let it expire.
+"""
+PIN_NONE = 0
+PIN_POST = 1
+PIN_WRITE = 2
 _locals = threading.local()
 
 
 def this_thread_is_pinned():
     """Return whether the current thread should send all its reads to the
     master DB."""
-    return getattr(_locals, 'pinned', False)
+    return getattr(_locals, 'pinned', PIN_NONE)
 
 
-def pin_this_thread():
+def pin_this_thread(reason=PIN_POST):
     """Mark this thread as "stuck" to the master for all DB access."""
-    _locals.pinned = True
+    _locals.pinned = reason
 
 
 def unpin_this_thread():
