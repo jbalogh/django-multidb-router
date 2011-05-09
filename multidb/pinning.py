@@ -15,12 +15,12 @@ _locals = threading.local()
 def this_thread_is_pinned():
     """Return whether the current thread should send all its reads to the
     master DB."""
-    return getattr(_locals, 'pinned', False)
+    return getattr(_locals, 'pinned', 0)
 
 
-def pin_this_thread():
+def pin_this_thread(level=1):
     """Mark this thread as "stuck" to the master for all DB access."""
-    _locals.pinned = True
+    _locals.pinned = level
 
 
 def unpin_this_thread():
