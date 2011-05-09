@@ -8,19 +8,21 @@ import threading
 __all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
            'use_master']
 
-
+PIN_NONE = 0
+PIN_POST = 1
+PIN_WRITE = 2
 _locals = threading.local()
 
 
 def this_thread_is_pinned():
     """Return whether the current thread should send all its reads to the
     master DB."""
-    return getattr(_locals, 'pinned', 0)
+    return getattr(_locals, 'pinned', PIN_NONE)
 
 
-def pin_this_thread(level=1):
+def pin_this_thread(reason=PIN_POST):
     """Mark this thread as "stuck" to the master for all DB access."""
-    _locals.pinned = level
+    _locals.pinned = reason
 
 
 def unpin_this_thread():

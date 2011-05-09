@@ -1,7 +1,7 @@
 from django.conf import settings
 
 from .pinning import (pin_this_thread, unpin_this_thread,
-                      this_thread_is_pinned)
+                      this_thread_is_pinned, PIN_WRITE)
 
 
 # The name of the cookie that directs a request's reads to the master DB
@@ -40,8 +40,8 @@ class PinningRouterMiddleware(object):
         Even if it was already set, reset its expiration time.
 
         """
-        should_pin = 2 == this_thread_is_pinned()
-        if request.method == 'POST' or should_pin:
+        did_write = PIN_WRITE == this_thread_is_pinned()
+        if request.method == 'POST' or did_write:
             response.set_cookie(PINNING_COOKIE, value='y',
                                 max_age=PINNING_SECONDS)
         return response
