@@ -76,12 +76,6 @@ class PinningTests(UnpinningTestCase):
         eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
 
 
-    def test_pin_on_write(self):
-        router = PinningMasterSlaveRouter()
-        router.db_for_write(None)
-        assert this_thread_is_pinned()
-
-
 class MiddlewareTests(UnpinningTestCase):
     """Tests for the middleware that supports pinning"""
 
@@ -121,13 +115,6 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
             PINNING_SECONDS)
-
-    def test_pin_on_write(self):
-        """Make sure the cookie gets set on GET if there's a write."""
-        self.request.method = 'GET'
-        pin_this_thread(2)
-        response = self.middleware.process_response(self.request, HttpResponse())
-        assert PINNING_COOKIE in response.cookies
 
 
 class ContextDecoratorTests(TestCase):
