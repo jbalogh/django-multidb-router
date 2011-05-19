@@ -8,7 +8,7 @@ from multidb import (DEFAULT_DB_ALIAS, MasterSlaveRouter,
 from multidb.middleware import (PINNING_COOKIE, PINNING_SECONDS,
     PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned,
-    pin_this_thread, unpin_this_thread, use_master)
+    pin_this_thread, unpin_this_thread, use_master, db_write)
 
 
 class UnpinningTestCase(TestCase):
@@ -115,6 +115,28 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
             PINNING_SECONDS)
+
+    def test_attribute(self):
+        """The cookie should get set if the _db_write attribute is True."""
+        res = HttpResponse()
+        res._db_write = True
+        response = self.middleware.process_response(self.request, res)
+        assert PINNING_COOKIE in response.cookies
+
+    def test_db_write_decorator(self):
+        """The @db_write decorator should make any view set the cookie."""
+        req = self.request
+        req.method = 'GET'
+        def view(req):
+            return HttpResponse()
+        response = self.middleware.process_response(req, view(req))
+        assert PINNING_COOKIE not in response.cookies
+
+        @db_write
+        def write_view(req):
+            return HttpResponse()
+        response = self.middleware.process_response(req, write_view(req))
+        assert PINNING_COOKIE in response.cookies
 
 
 class ContextDecoratorTests(TestCase):

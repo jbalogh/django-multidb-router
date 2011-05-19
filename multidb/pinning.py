@@ -57,3 +57,12 @@ class UseMaster(object):
             raise type, value, tb
 
 use_master = UseMaster()
+
+
+def db_write(fn):
+    @wraps(fn)
+    def _wrapped(*args, **kw):
+        response = fn(*args, **kw)
+        response._db_write = True
+        return response
+    return _wrapped
