@@ -32,7 +32,7 @@ import random
 
 from django.conf import settings
 
-from .pinning import this_thread_is_pinned
+from .pinning import this_thread_is_pinned, db_write
 
 
 DEFAULT_DB_ALIAS = 'default'

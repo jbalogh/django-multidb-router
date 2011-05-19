@@ -39,7 +39,7 @@ class PinningRouterMiddleware(object):
         Even if it was already set, reset its expiration time.
 
         """
-        if request.method == 'POST':
+        if request.method == 'POST' or getattr(response, '_db_write', False):
             response.set_cookie(PINNING_COOKIE, value='y',
                                 max_age=PINNING_SECONDS)
         return response
