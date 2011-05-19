@@ -51,8 +51,12 @@ length of time.
 Caveats
 =======
 
-``PinningRouterMiddleware`` identifies database writes solely by request type,
-assuming that any ``POST`` request is a write.
+``PinningRouterMiddleware`` identifies database writes primarily by request
+type, assuming that any ``POST`` request is a write. You can indicate that
+any view triggers a database write by using the ``multidb.db_write`` decorator.
+You can also manually set ``response._db_write = True`` to indicate that a
+write occurred. Either one of these will cause the same result as if the
+request was a ``POST``.
 
 This package makes no attempt to redirect database activity that occurs after a
 write but during the same request. You application is responsible for manually
