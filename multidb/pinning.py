@@ -59,10 +59,15 @@ class UseMaster(object):
 use_master = UseMaster()
 
 
+def mark_as_write(response):
+    """Mark a response as having done a DB write."""
+    response._db_write = True
+    return response
+
+
 def db_write(fn):
     @wraps(fn)
     def _wrapped(*args, **kw):
         response = fn(*args, **kw)
-        response._db_write = True
-        return response
+        return mark_as_write(response)
     return _wrapped
