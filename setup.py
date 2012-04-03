@@ -8,7 +8,7 @@ setup(
     long_description=open('README.rst').read(),
     author='Jeff Balogh',
     author_email='jbalogh@mozilla.com',
-    url='http://github.com/jbalogh/multidb-router',
+    url='https://github.com/jbalogh/django-multidb-router',
     license='BSD',
     packages=find_packages(),
     include_package_data=True,
