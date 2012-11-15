@@ -6,7 +6,7 @@ MasterSlaveRouter
 -----------------
 
 With ``multidb.MasterSlaveRouter`` all read queries will go to a slave
-database;  all inserts, updates, and deletes will do to the ``default``
+database;  all inserts, updates, and deletes will go to the ``default``
 database.
 
 First, define ``SLAVE_DATABASES`` in your settings.  It should be a list of
