@@ -1,5 +1,6 @@
 # A Django settings module to support the tests
 
+SECRET_KEY = 'dummy'
 TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
 
 # The default database should point to the master.
