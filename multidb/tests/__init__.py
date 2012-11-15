@@ -192,11 +192,9 @@ class ContextDecoratorTests(TestCase):
 
     def test_context_manager_exception(self):
         unpin_this_thread()
-        try:
-            assert not this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+        with self.assertRaises(ValueError):
             with use_master:
                 assert this_thread_is_pinned()
                 raise ValueError
-        except ValueError:
-            pass
         assert not this_thread_is_pinned()

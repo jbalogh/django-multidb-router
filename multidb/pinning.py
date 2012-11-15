@@ -6,7 +6,7 @@ import threading
 
 
 __all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
-           'use_master']
+           'use_master', 'db_write']
 
 
 _locals = threading.local()
@@ -29,10 +29,7 @@ def unpin_this_thread():
     If the thread wasn't marked, do nothing.
 
     """
-    try:
-        del _locals.pinned
-    except AttributeError:
-        pass
+    _locals.pinned = False
 
 
 class UseMaster(object):
@@ -53,8 +50,6 @@ class UseMaster(object):
     def __exit__(self, type, value, tb):
         if not self.old:
             unpin_this_thread()
-        if any((type, value, tb)):
-            raise type, value, tb
 
 use_master = UseMaster()
 
