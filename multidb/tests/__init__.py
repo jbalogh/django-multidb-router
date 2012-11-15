@@ -75,6 +75,24 @@ class PinningTests(UnpinningTestCase):
         pin_this_thread()
         eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
 
+    def test_db_write_decorator(self):
+
+        def read_view(req):
+            return HttpResponse()
+
+        @db_write
+        def write_view(req):
+            eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
+            return HttpResponse()
+
+        router = PinningMasterSlaveRouter()
+        read_view(HttpRequest())
+        eq_(router.db_for_read(None), get_slave())
+        write_view(HttpRequest())
+        eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
+        read_view(HttpRequest())
+        eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
+
 
 class MiddlewareTests(UnpinningTestCase):
     """Tests for the middleware that supports pinning"""

@@ -68,6 +68,7 @@ def mark_as_write(response):
 def db_write(fn):
     @wraps(fn)
     def _wrapped(*args, **kw):
+        pin_this_thread()
         response = fn(*args, **kw)
         return mark_as_write(response)
     return _wrapped
