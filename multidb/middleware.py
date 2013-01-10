@@ -13,6 +13,9 @@ PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
 PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 
 
+READ_ONLY_METHODS = ('GET', 'TRACE', 'HEAD', 'OPTIONS')
+
+
 class PinningRouterMiddleware(object):
     """Middleware to support the PinningMasterSlaveRouter
 
@@ -27,19 +30,19 @@ class PinningRouterMiddleware(object):
     def process_request(self, request):
         """Set the thread's pinning flag according to the presence of the
         incoming cookie."""
-        if PINNING_COOKIE in request.COOKIES or request.method == 'POST':
+        if PINNING_COOKIE in request.COOKIES or request.method not in READ_ONLY_METHODS:
             pin_this_thread()
         else:
             # In case the last request this thread served was pinned:
             unpin_this_thread()
 
     def process_response(self, request, response):
-        """On a POST request, assume there was a DB write and set the cookie.
+        """For some HTTP methods, assume there was a DB write and set the cookie.
 
         Even if it was already set, reset its expiration time.
 
         """
-        if request.method == 'POST' or getattr(response, '_db_write', False):
+        if request.method not in READ_ONLY_METHODS or getattr(response, '_db_write', False):
             response.set_cookie(PINNING_COOKIE, value='y',
                                 max_age=PINNING_SECONDS)
         return response

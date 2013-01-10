@@ -79,9 +79,9 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
     """Router that sends reads to master iff a certain flag is set. Writes
     always go to master.
 
-    Typically, we set a cookie in middleware when the request is a POST and
-    give it a max age that's certain to be longer than the replication lag. The
-    flag comes from that cookie.
+    Typically, we set a cookie in middleware for certain request HTTP methods
+    and give it a max age that's certain to be longer than the replication lag.
+    The flag comes from that cookie.
 
     """
     def db_for_read(self, model, **hints):
