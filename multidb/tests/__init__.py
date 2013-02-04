@@ -109,8 +109,9 @@ class MiddlewareTests(UnpinningTestCase):
         assert this_thread_is_pinned()
 
     def test_unpin_on_no_cookie(self):
-        """Thread should unpin when cookie is absent and method isn't POST."""
+        """Thread should unpin when cookie is absent and method is GET."""
         pin_this_thread()
+        self.request.method = 'GET'
         self.middleware.process_request(self.request)
         assert not this_thread_is_pinned()
 
@@ -121,8 +122,9 @@ class MiddlewareTests(UnpinningTestCase):
         assert this_thread_is_pinned()
 
     def test_process_response(self):
-        """Make sure the cookie gets set on POST requests and not otherwise."""
+        """Make sure the cookie gets set on POSTs but not GETs."""
 
+        self.request.method = 'GET'
         response = self.middleware.process_response(self.request, HttpResponse())
         assert PINNING_COOKIE not in response.cookies
 
@@ -143,6 +145,7 @@ class MiddlewareTests(UnpinningTestCase):
         """The @db_write decorator should make any view set the cookie."""
         req = self.request
         req.method = 'GET'
+
         def view(req):
             return HttpResponse()
         response = self.middleware.process_response(req, view(req))

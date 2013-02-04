@@ -30,19 +30,22 @@ class PinningRouterMiddleware(object):
     def process_request(self, request):
         """Set the thread's pinning flag according to the presence of the
         incoming cookie."""
-        if PINNING_COOKIE in request.COOKIES or request.method not in READ_ONLY_METHODS:
+        if (PINNING_COOKIE in request.COOKIES or
+                request.method not in READ_ONLY_METHODS):
             pin_this_thread()
         else:
             # In case the last request this thread served was pinned:
             unpin_this_thread()
 
     def process_response(self, request, response):
-        """For some HTTP methods, assume there was a DB write and set the cookie.
+        """For some HTTP methods, assume there was a DB write and set the
+        cookie.
 
         Even if it was already set, reset its expiration time.
 
         """
-        if request.method not in READ_ONLY_METHODS or getattr(response, '_db_write', False):
+        if (request.method not in READ_ONLY_METHODS or
+                getattr(response, '_db_write', False)):
             response.set_cookie(PINNING_COOKIE, value='y',
                                 max_age=PINNING_SECONDS)
         return response
