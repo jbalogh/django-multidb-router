@@ -1,12 +1,21 @@
 from django.http import HttpResponse
+from django.views.generic import View
+
 from multidb.pinning import this_thread_is_pinned
 
 
-def view_that_always_changes_the_db(request):
+def _pinned():
+    """Return a text/plain HttpResponse with content "pinned" or "not pinned".
+    """
     result = "pinned" if this_thread_is_pinned() else "not pinned"
     return HttpResponse(result, content_type="text/plain")
 
 
-def normal_view(request):
-    result = "pinned" if this_thread_is_pinned() else "not pinned"
-    return HttpResponse(result, content_type="text/plain")
+def dummy_view(request):
+    return _pinned()
+
+
+class class_based_dummy_view(View):
+
+    def get(self, request, *args, **kwargs):
+        return _pinned()

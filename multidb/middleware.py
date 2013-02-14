@@ -13,10 +13,6 @@ PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
 PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 
 
-# Views that pin, even if they aren't POST.
-PINNING_VIEWS = getattr(settings, 'MULTIDB_PINNING_VIEWS', ())
-
-
 class PinningRouterMiddleware(object):
     """Middleware to support the PinningMasterSlaveRouter
 
@@ -40,7 +36,7 @@ class PinningRouterMiddleware(object):
     def process_view(self, request, view_func, view_args, view_kwargs):
         """Pin the thread if the current view is in MULTIDB_PINNING_VIEWS."""
         view_name = view_func.__module__ + '.' + view_func.__name__
-        if view_name in PINNING_VIEWS:
+        if view_name in getattr(settings, 'MULTIDB_PINNING_VIEWS', ()):
             pin_this_thread()
 
     def process_response(self, request, response):

@@ -1,6 +1,8 @@
 from django.conf.urls import patterns
 
+from multidb.tests.views import class_based_dummy_view
+
 urlpatterns = patterns('',
-  (r'^normal/$', 'multidb.tests.views.normal_view'),
-  (r'^always_pin/$', 'multidb.tests.views.view_that_always_changes_the_db'),
+  (r'^dummy/$', 'multidb.tests.views.dummy_view'),
+  (r'^cdummy/$', class_based_dummy_view.as_view()),
 )

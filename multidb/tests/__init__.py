@@ -1,7 +1,6 @@
 from django.http import HttpRequest, HttpResponse
 from django.test import TestCase
 from django.test.client import Client
-from django.test.utils import override_settings
 
 from nose.tools import eq_
 
@@ -159,16 +158,23 @@ class MiddlewareTests(UnpinningTestCase):
         response = self.middleware.process_response(req, write_view(req))
         assert PINNING_COOKIE in response.cookies
 
-    @override_settings(MIDDLEWARE_CLASSES=
-                    ('multidb.middleware.PinningRouterMiddleware',))
-    @override_settings(MULTIDB_PINNING_VIEWS=
-                    ('multidb.tests.views.view_that_always_changes_the_db',))
     def test_multidb_pinning_views_setting(self):
         c = Client()
-        response = c.get('/normal/')
-        self.assertEquals(response.content, "not pinned")
-        response = c.get('/always_pin/')
-        self.assertEquals(response.content, "pinned")
+        middleware = ('multidb.middleware.PinningRouterMiddleware',)
+        pinning_views = ('multidb.tests.views.dummy_view',
+                         'multidb.tests.views.class_based_dummy_view')
+        with self.settings(MIDDLEWARE_CLASSES=middleware,
+                           MULTIDB_PINNING_VIEWS=pinning_views):
+            response = c.get('/dummy/')
+            self.assertEquals(response.content, "pinned")
+            response = c.get('/cdummy/')
+            self.assertEquals(response.content, "pinned")
+        with self.settings(MIDDLEWARE_CLASSES=middleware,
+                           MULTIDB_PINNING_VIEWS=()):
+            response = c.get('/dummy/')
+            self.assertEquals(response.content, "not pinned")
+            response = c.get('/cdummy/')
+            self.assertEquals(response.content, "not pinned")
 
 
 class ContextDecoratorTests(TestCase):
