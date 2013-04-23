@@ -60,7 +60,10 @@ request:
 
 2. List the view in the ``MULTIDB_PINNING_VIEWS``. This setting is a sequence
    of strings, which are the full paths of the view names, such as
-   ``myapp.core.views.myview``.
+   ``myapp.core.views.myview``. If the view is a generic view, this must end in
+   ``.as_view``. If the view is an object (such as the object returned by
+   ``django.contrib.syndication.views.Feed()``), the view name is the name of
+   the class (``django.contrib.syndication.views.Feed`` in our example).
 
 Either of the two will cause the same result as if the request was a ``POST``.
 

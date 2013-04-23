@@ -19,3 +19,10 @@ class class_based_dummy_view(View):
 
     def get(self, request, *args, **kwargs):
         return _pinned()
+
+
+class object_dummy_view(object):
+    """An example of this kind of view is django.contrib.syndication.Feed."""
+
+    def __call__(self, request, *args, **kwargs):
+        return _pinned()

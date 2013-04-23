@@ -162,18 +162,23 @@ class MiddlewareTests(UnpinningTestCase):
         c = Client()
         middleware = ('multidb.middleware.PinningRouterMiddleware',)
         pinning_views = ('multidb.tests.views.dummy_view',
-                         'multidb.tests.views.class_based_dummy_view')
+                         'multidb.tests.views.class_based_dummy_view',
+                         'multidb.tests.views.object_dummy_view')
         with self.settings(MIDDLEWARE_CLASSES=middleware,
                            MULTIDB_PINNING_VIEWS=pinning_views):
             response = c.get('/dummy/')
             self.assertEquals(response.content, "pinned")
             response = c.get('/cdummy/')
             self.assertEquals(response.content, "pinned")
+            response = c.get('/odummy/')
+            self.assertEquals(response.content, "pinned")
         with self.settings(MIDDLEWARE_CLASSES=middleware,
                            MULTIDB_PINNING_VIEWS=()):
             response = c.get('/dummy/')
             self.assertEquals(response.content, "not pinned")
             response = c.get('/cdummy/')
+            self.assertEquals(response.content, "not pinned")
+            response = c.get('/odummy/')
             self.assertEquals(response.content, "not pinned")
 
 
