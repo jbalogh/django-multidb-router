@@ -33,6 +33,19 @@ class PinningRouterMiddleware(object):
             # In case the last request this thread served was pinned:
             unpin_this_thread()
 
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        """Pin the thread if the current view is in MULTIDB_PINNING_VIEWS."""
+        module = view_func.__module__
+        try:
+            name = view_func.__name__
+        except AttributeError:
+            # view_func doesn't have __name__; it's probably an object view
+            # like django.contrib.syndication.views.Feed().
+            name = view_func.__class__.__name__
+        view_name = module + '.' + name
+        if view_name in getattr(settings, 'MULTIDB_PINNING_VIEWS', ()):
+            pin_this_thread()
+
     def process_response(self, request, response):
         """On a POST request, assume there was a DB write and set the cookie.
 

@@ -52,9 +52,21 @@ Caveats
 =======
 
 ``PinningRouterMiddleware`` identifies database writes primarily by request
-type, assuming that any ``POST`` request is a write. You can indicate that
-any view writes to the database by using the ``multidb.db_write``
-decorator. This will cause the same result as if the request was a ``POST``.
+type, assuming that any ``POST`` request is a write. There are two ways to
+specify that a view writes to the database if it doesn't use a ``POST``
+request:
+
+1. Decorate the view with the ``multidb.db_write`` decorator.
+
+2. List the view in the ``MULTIDB_PINNING_VIEWS``. This setting is a sequence
+   of strings, which are the full paths of the view names, such as
+   ``myapp.core.views.myview``. If the view is a generic view, the
+   view name is the name of the class (i.e. without the ``.as_view``).
+   If the view is an object (such as the object returned by
+   ``django.contrib.syndication.views.Feed()``), the view name is the name of
+   the class (``django.contrib.syndication.views.Feed`` in our example).
+
+Either of the two will cause the same result as if the request was a ``POST``.
 
 You can also manually set ``response._db_write = True`` to indicate that a
 write occurred. This will not result in using the ``default`` database in this
