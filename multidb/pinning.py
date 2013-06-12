@@ -8,7 +8,7 @@ from django.conf import settings
 
 
 __all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
-           'use_master', 'set_db_write_for_this_thread',
+           'use_master', 'db_write', 'set_db_write_for_this_thread',
            'unset_db_write_for_this_thread',
            'this_thread_has_db_write_set',
            'set_db_write_for_this_thread_if_needed']
@@ -34,10 +34,7 @@ def unpin_this_thread():
     If the thread wasn't marked, do nothing.
 
     """
-    try:
-        del _locals.pinned
-    except AttributeError:
-        pass
+    _locals.pinned = False
 
 
 def set_db_write_for_this_thread():
@@ -99,8 +96,6 @@ class UseMaster(object):
     def __exit__(self, type, value, tb):
         if not self.old:
             unpin_this_thread()
-        if any((type, value, tb)):
-            raise type, value, tb
 
 use_master = UseMaster()
 
@@ -114,7 +109,7 @@ def mark_as_write(response):
 def db_write(fn):
     @wraps(fn)
     def _wrapped(*args, **kw):
-        pin_this_thread()
-        response = fn(*args, **kw)
+        with use_master:
+            response = fn(*args, **kw)
         return mark_as_write(response)
     return _wrapped

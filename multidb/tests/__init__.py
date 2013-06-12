@@ -79,6 +79,7 @@ class PinningTests(UnpinningTestCase):
     def test_db_write_decorator(self):
 
         def read_view(req):
+            eq_(router.db_for_read(None), get_slave())
             return HttpResponse()
 
         @db_write
@@ -87,12 +88,9 @@ class PinningTests(UnpinningTestCase):
             return HttpResponse()
 
         router = PinningMasterSlaveRouter()
-        read_view(HttpRequest())
         eq_(router.db_for_read(None), get_slave())
         write_view(HttpRequest())
-        eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
         read_view(HttpRequest())
-        eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
 
 
 class MiddlewareTests(UnpinningTestCase):
@@ -231,11 +229,9 @@ class ContextDecoratorTests(TestCase):
 
     def test_context_manager_exception(self):
         unpin_this_thread()
-        try:
-            assert not this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+        with self.assertRaises(ValueError):
             with use_master:
                 assert this_thread_is_pinned()
                 raise ValueError
-        except ValueError:
-            pass
         assert not this_thread_is_pinned()
