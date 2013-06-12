@@ -126,11 +126,12 @@ class MiddlewareTests(UnpinningTestCase):
 
     def test_process_response(self):
         """Make sure the cookie gets set on POST requests and not otherwise."""
-
+        self.middleware.process_request(self.request)
         response = self.middleware.process_response(self.request, HttpResponse())
         assert PINNING_COOKIE not in response.cookies
 
         self.request.method = 'POST'
+        self.middleware.process_request(self.request)
         response = self.middleware.process_response(self.request, HttpResponse())
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
@@ -159,27 +160,40 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
 
     def test_multidb_pinning_views_setting(self):
-        c = Client()
         middleware = ('multidb.middleware.PinningRouterMiddleware',)
         pinning_views = ('multidb.tests.views.dummy_view',
                          'multidb.tests.views.class_based_dummy_view',
                          'multidb.tests.views.object_dummy_view')
         with self.settings(MIDDLEWARE_CLASSES=middleware,
                            MULTIDB_PINNING_VIEWS=pinning_views):
+            # We use a new client in each request so that it doesn't have
+            # cookies.
+            c = Client()
             response = c.get('/dummy/')
             self.assertEquals(response.content, "pinned")
+            self.assertTrue(PINNING_COOKIE in response.cookies)
+            c = Client()
             response = c.get('/cdummy/')
             self.assertEquals(response.content, "pinned")
+            self.assertTrue(PINNING_COOKIE in response.cookies)
+            c = Client()
             response = c.get('/odummy/')
             self.assertEquals(response.content, "pinned")
+            self.assertTrue(PINNING_COOKIE in response.cookies)
         with self.settings(MIDDLEWARE_CLASSES=middleware,
                            MULTIDB_PINNING_VIEWS=()):
+            c = Client()
             response = c.get('/dummy/')
             self.assertEquals(response.content, "not pinned")
+            self.assertFalse(PINNING_COOKIE in response.cookies)
+            c = Client()
             response = c.get('/cdummy/')
             self.assertEquals(response.content, "not pinned")
+            self.assertFalse(PINNING_COOKIE in response.cookies)
+            c = Client()
             response = c.get('/odummy/')
             self.assertEquals(response.content, "not pinned")
+            self.assertFalse(PINNING_COOKIE in response.cookies)
 
 
 class ContextDecoratorTests(TestCase):
