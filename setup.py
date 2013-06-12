@@ -10,7 +10,7 @@ setup(
     author_email='jbalogh@mozilla.com',
     url='https://github.com/jbalogh/django-multidb-router',
     license='BSD',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     zip_safe=False,
     test_requires=['Fabric', 'django-nose'],
