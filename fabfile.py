@@ -11,7 +11,7 @@ from fabric.api import local, env
 
 
 os.environ['PYTHONPATH'] = os.path.dirname(__file__)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'multidb.tests.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
 env.hosts = ['localhost']
 
 
@@ -23,7 +23,7 @@ def shell():
 
 
 def test(pdb=False):
-    cmd = 'django-admin.py test'
+    cmd = 'django-admin.py test tests.multidb'
 
     if pdb:
         cmd += ' --pdb --pdb-failures -s'
