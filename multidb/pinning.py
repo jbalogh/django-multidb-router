@@ -4,9 +4,14 @@ writes should be "stuck" to the master."""
 from functools import wraps
 import threading
 
+from django.conf import settings
+
 
 __all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
-           'use_master', 'db_write']
+           'use_master', 'db_write', 'set_db_write_for_this_thread',
+           'unset_db_write_for_this_thread',
+           'this_thread_has_db_write_set',
+           'set_db_write_for_this_thread_if_needed']
 
 
 _locals = threading.local()
@@ -30,6 +35,47 @@ def unpin_this_thread():
 
     """
     _locals.pinned = False
+
+
+def set_db_write_for_this_thread():
+    _locals.db_write = True
+
+
+def unset_db_write_for_this_thread():
+    _locals.db_write = False
+
+
+def this_thread_has_db_write_set():
+    """Return whether the db_write flag is set for the current thread
+    (this means we should set the cookie."""
+    return getattr(_locals, 'db_write', False)
+
+
+def set_db_write_for_this_thread_if_needed(request, view_func=False):
+    """Check whether this thread should be assumed to be writing to
+    the database, and if yes set a flag.  The thread is db_write if
+    it's a POST or if the view is listed in MULTIDB_PINNING_VIEWS.
+    (This function never unsets db_write if it's already set.)
+    """
+    if this_thread_has_db_write_set():
+        # We have already set the db_write flag in a previous call
+        return
+    if request.method == 'POST':
+        set_db_write_for_this_thread()
+        return
+    if not view_func:
+        return
+    module = view_func.__module__
+    try:
+        name = view_func.__name__
+    except AttributeError:
+        # view_func doesn't have __name__; it's probably an object view
+        # like django.contrib.syndication.views.Feed().
+        name = view_func.__class__.__name__
+    view_name = module + '.' + name
+    if view_name in getattr(settings, 'MULTIDB_PINNING_VIEWS', ()):
+        set_db_write_for_this_thread()
+        return
 
 
 class UseMaster(object):
