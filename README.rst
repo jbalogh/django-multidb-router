@@ -109,3 +109,12 @@ or as a decorator::
     @use_master
     def func(*args, **kw):
         """Touches the master database."""
+
+
+Running the Tests
+-----------------
+
+To run the tests, you'll need to install the development requirements::
+
+    pip install -r requirements.txt
+    ./run.sh test
