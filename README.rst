@@ -52,9 +52,10 @@ Caveats
 =======
 
 ``PinningRouterMiddleware`` identifies database writes primarily by request
-type, assuming that any ``POST`` request is a write. You can indicate that
-any view writes to the database by using the ``multidb.db_write``
-decorator. This will cause the same result as if the request was a ``POST``.
+type, assuming that requests with HTTP methods that are not ``GET``, ``TRACE``,
+``HEAD``, or ``OPTIONS`` are writes. You can indicate that any view writes to
+the database by using the ``multidb.db_write`` decorator. This will cause the
+same result as if the request were, e.g., a ``POST``.
 
 You can also manually set ``response._db_write = True`` to indicate that a
 write occurred. This will not result in using the ``default`` database in this
