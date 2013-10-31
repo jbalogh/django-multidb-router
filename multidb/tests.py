@@ -4,11 +4,11 @@ from django.test import TestCase
 from nose.tools import eq_
 
 from multidb import (DEFAULT_DB_ALIAS, MasterSlaveRouter,
-    PinningMasterSlaveRouter, get_slave)
+                     PinningMasterSlaveRouter, get_slave)
 from multidb.middleware import (PINNING_COOKIE, PINNING_SECONDS,
-    PinningRouterMiddleware)
-from multidb.pinning import (this_thread_is_pinned,
-    pin_this_thread, unpin_this_thread, use_master, db_write)
+                                PinningRouterMiddleware)
+from multidb.pinning import (this_thread_is_pinned, pin_this_thread,
+                             unpin_this_thread, use_master, db_write)
 
 
 class UnpinningTestCase(TestCase):
@@ -125,11 +125,13 @@ class MiddlewareTests(UnpinningTestCase):
         """Make sure the cookie gets set on POSTs but not GETs."""
 
         self.request.method = 'GET'
-        response = self.middleware.process_response(self.request, HttpResponse())
+        response = self.middleware.process_response(
+            self.request, HttpResponse())
         assert PINNING_COOKIE not in response.cookies
 
         self.request.method = 'POST'
-        response = self.middleware.process_response(self.request, HttpResponse())
+        response = self.middleware.process_response(
+            self.request, HttpResponse())
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
             PINNING_SECONDS)
