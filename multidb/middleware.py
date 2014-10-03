@@ -1,7 +1,11 @@
 from django.conf import settings
-from django.utils.module_loading import import_by_path
+try:
+    from django.utils.module_loading import import_string
+except ImportError:
+    from django.utils.module_loading import import_by_path as import_string
 
 from .pinning import pin_this_thread, unpin_this_thread
+from .filters import request_method_filter
 
 
 # The name of the cookie that directs a request's reads to the master DB
@@ -13,13 +17,14 @@ PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
 PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 
 # The filters checking a request should be pinned or not
-REQUEST_FILTERS = getattr(settings, 'MULTIDB_REQUEST_FILTERS',
-                          ('multidb.filters.request_method_filter',))
-filters = tuple(import_by_path(f) for f in REQUEST_FILTERS)
+filters = getattr(settings, 'MULTIDB_REQUEST_FILTERS',
+                  (request_method_filter,))
+REQUEST_FILTERS = tuple(f if callable(f) else import_string(f)
+                        for f in filters)
 
 
 def check_request(request):
-    return any(f(request) for f in filters)
+    return any(f(request) for f in REQUEST_FILTERS)
 
 
 class PinningRouterMiddleware(object):
