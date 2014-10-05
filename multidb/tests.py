@@ -5,10 +5,12 @@ from nose.tools import eq_
 
 from multidb import (DEFAULT_DB_ALIAS, MasterSlaveRouter,
                      PinningMasterSlaveRouter, get_slave)
+import multidb.middleware
 from multidb.middleware import (PINNING_COOKIE, PINNING_SECONDS,
                                 PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned, pin_this_thread,
                              unpin_this_thread, use_master, db_write)
+from multidb.filters import request_method_filter as origin_filter
 
 
 class UnpinningTestCase(TestCase):
@@ -158,6 +160,28 @@ class MiddlewareTests(UnpinningTestCase):
             return HttpResponse()
         response = self.middleware.process_response(req, write_view(req))
         assert PINNING_COOKIE in response.cookies
+
+    def test_request_filter(self):
+        """Set a request filter that pins GETs rather than POSTs."""
+
+        def request_method_filter(request):
+            return not origin_filter(request)
+        old_filters = multidb.middleware.REQUEST_FILTERS
+        multidb.middleware.REQUEST_FILTERS = (request_method_filter,)
+
+        self.request.method = 'GET'
+        response = self.middleware.process_response(
+            self.request, HttpResponse())
+        assert PINNING_COOKIE in response.cookies
+        eq_(response.cookies[PINNING_COOKIE]['max-age'],
+            PINNING_SECONDS)
+
+        self.request.method = 'POST'
+        response = self.middleware.process_response(
+            self.request, HttpResponse())
+        assert PINNING_COOKIE not in response.cookies
+
+        multidb.middleware.REQUEST_FILTERS = old_filters
 
 
 class ContextDecoratorTests(TestCase):
