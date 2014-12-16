@@ -29,7 +29,9 @@ If you want to get a connection to a slave in your app, use
 """
 import itertools
 import random
+from distutils.version import LooseVersion
 
+import django
 from django.conf import settings
 
 from .pinning import this_thread_is_pinned, db_write  # noqa
@@ -45,7 +47,10 @@ if getattr(settings, 'SLAVE_DATABASES'):
     slaves = itertools.cycle(dbs)
     # Set the slaves as test mirrors of the master.
     for db in dbs:
-        settings.DATABASES[db]['TEST_MIRROR'] = DEFAULT_DB_ALIAS
+        if LooseVersion(django.get_version()) >= LooseVersion('1.7'):
+            settings.DATABASES[db].get('TEST', {})['MIRROR'] = DEFAULT_DB_ALIAS
+        else:
+            settings.DATABASES[db]['TEST_MIRROR'] = DEFAULT_DB_ALIAS
 else:
     slaves = itertools.repeat(DEFAULT_DB_ALIAS)
 
