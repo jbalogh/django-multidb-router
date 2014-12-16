@@ -1,5 +1,6 @@
 import sys
 import os
+from __future__ import unicode_literals
 
 sys.path.append(os.path.abspath('..'))
 
@@ -12,8 +13,8 @@ master_doc = 'index'
 extensions = ['sphinx.ext.autodoc']
 
 # General information about the project.
-project = u'multidb-router'
-copyright = u'2010, The Zamboni Collective'
+project = 'multidb-router'
+copyright = '2010, The Zamboni Collective'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

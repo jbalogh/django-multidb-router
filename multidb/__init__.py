@@ -52,7 +52,7 @@ else:
 
 def get_slave():
     """Returns the alias of a slave database."""
-    return slaves.next()
+    return next(slaves)
 
 
 class MasterSlaveRouter(object):
