@@ -14,16 +14,16 @@ extensions = ['sphinx.ext.autodoc']
 
 # General information about the project.
 project = 'multidb-router'
-copyright = '2010, The Zamboni Collective'
+copyright = '2015, The Zamboni Collective'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '0.2'
+version = '0.6'
 # The full version, including alpha/beta/rc tags.
-release = '0.2'
+release = '0.6.0'
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.

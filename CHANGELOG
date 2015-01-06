@@ -1,0 +1,8 @@
+CHANGELOG
+=========
+
+Version 0.6
+-----------
+
+- Support for Django 1.7
+- Support for Python 3
