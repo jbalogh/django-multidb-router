@@ -13,7 +13,7 @@ PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
 PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 
 
-READ_ONLY_METHODS = ('GET', 'TRACE', 'HEAD', 'OPTIONS')
+READ_ONLY_METHODS = frozenset([GET', 'TRACE', 'HEAD', 'OPTIONS'])
 
 
 class PinningRouterMiddleware(object):
