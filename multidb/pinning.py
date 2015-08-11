@@ -34,8 +34,6 @@ def unpin_this_thread():
 
 class UseMaster(object):
     """A contextmanager/decorator to use the master database."""
-    old = False
-
     def __call__(self, func):
         @wraps(func)
         def decorator(*args, **kw):
@@ -44,11 +42,11 @@ class UseMaster(object):
         return decorator
 
     def __enter__(self):
-        self.old = this_thread_is_pinned()
+        _locals.old = this_thread_is_pinned()
         pin_this_thread()
 
     def __exit__(self, type, value, tb):
-        if not self.old:
+        if not _locals.old:
             unpin_this_thread()
 
 use_master = UseMaster()
