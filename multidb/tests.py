@@ -1,3 +1,4 @@
+from threading import Lock, Thread
 from django.http import HttpRequest, HttpResponse
 from django.test import TestCase
 
@@ -160,7 +161,7 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
 
 
-class ContextDecoratorTests(TestCase):
+class UseMasterTests(TestCase):
     def test_decorator(self):
         @use_master
         def check():
@@ -201,3 +202,43 @@ class ContextDecoratorTests(TestCase):
                 assert this_thread_is_pinned()
                 raise ValueError
         assert not this_thread_is_pinned()
+
+    def test_multithreaded_unpinning(self):
+        thread1_lock = Lock()
+        thread2_lock = Lock()
+        thread1_lock.acquire()
+        thread2_lock.acquire()
+
+        pinned = {}
+
+        def thread1_worker():
+            with use_master:
+                thread1_lock.acquire()
+
+            pinned[1] = this_thread_is_pinned()
+
+        def thread2_worker():
+            pin_this_thread()
+            with use_master:
+                thread2_lock.acquire()
+
+            pinned[2] = this_thread_is_pinned()
+
+        thread1 = Thread(target=thread1_worker)
+        thread2 = Thread(target=thread2_worker)
+
+        # thread1 starts, entering `use_master` from an unpinned state
+        thread1.start()
+
+        # thread2 starts, entering `use_master` from a pinned state
+        thread2.start()
+
+        # thread2 finishes, returning to a pinned state
+        thread2_lock.release()
+        thread2.join()
+        self.assertEqual(pinned[2], True)
+
+        # thread1 finishes, returning to an unpinned state
+        thread1_lock.release()
+        thread1.join()
+        self.assertEqual(pinned[1], False)
