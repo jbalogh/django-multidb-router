@@ -187,7 +187,7 @@ class UseMasterTests(TestCase):
             assert this_thread_is_pinned()
         assert not this_thread_is_pinned()
 
-    def text_context_manager_resets(self):
+    def test_context_manager_resets(self):
         pin_this_thread()
         assert this_thread_is_pinned()
         with use_master:
