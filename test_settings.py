@@ -3,6 +3,11 @@
 SECRET_KEY = 'dummy'
 TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
 
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware'
+)
+
 # The default database should point to the master.
 DATABASES = {
     'default': {
