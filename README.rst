@@ -118,3 +118,9 @@ To run the tests, you'll need to install the development requirements::
 
     pip install -r requirements.txt
     ./run.sh test
+
+Alternatively, you can run the tests with several versions of Django
+and Python using tox:
+
+    pip install tox
+    tox
