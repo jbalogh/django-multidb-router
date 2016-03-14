@@ -34,7 +34,7 @@ from distutils.version import LooseVersion
 import django
 from django.conf import settings
 
-from .pinning import this_thread_is_pinned, db_write  # noqa
+from .pinning import this_thread_is_pinned, db_write, get_current_db, set_current_db  # noqa
 
 
 DEFAULT_DB_ALIAS = 'default'
