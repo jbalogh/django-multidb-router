@@ -93,3 +93,26 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
         """Send reads to slaves in round-robin unless this thread is "stuck" to
         the master."""
         return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
+
+
+class SameDbForRequestPinningMasterSlaveRouter(MasterSlaveRouter):
+    """Router that sends reads to master iff a certain flag is set. Writes
+    always go to master.
+
+    Typically, we set a cookie in middleware for certain request HTTP methods
+    and give it a max age that's certain to be longer than the replication lag.
+    The flag comes from that cookie.
+
+    """
+    def db_for_read(self, model, **hints):
+        """Send reads to slaves in round-robin unless this thread is "stuck" to
+        the master."""
+        if this_thread_is_pinned():
+            return DEFAULT_DB_ALIAS
+        else:
+            ret = get_current_db()
+            if not ret:
+                ret = get_slave()
+                set_current_db(ret)
+                return
+            return ret

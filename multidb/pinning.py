@@ -9,7 +9,13 @@ __all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
            'use_master', 'db_write']
 
 
-_locals = threading.local()
+try:
+    from gevent.local import local
+except ImportError:
+    local = threading.local
+
+
+_locals = local()
 
 
 def this_thread_is_pinned():
@@ -30,6 +36,18 @@ def unpin_this_thread():
 
     """
     _locals.pinned = False
+
+
+def clean_current_db():
+    _locals.current_db = None
+
+
+def get_current_db():
+    return _locals.current_db
+
+
+def set_current_db(dbname):
+    _locals.current_db = dbname
 
 
 class UseMaster(object):
