@@ -114,5 +114,5 @@ class SameDbForRequestPinningMasterSlaveRouter(MasterSlaveRouter):
             if not ret:
                 ret = get_slave()
                 set_current_db(ret)
-                return
+                return ret
             return ret
