@@ -43,7 +43,7 @@ def clean_current_db():
 
 
 def get_current_db():
-    return _locals.current_db
+    return getattr(_locals, "current_db", None)
 
 
 def set_current_db(dbname):
