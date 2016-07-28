@@ -98,3 +98,9 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
         """Send reads to slaves in round-robin unless this thread is "stuck" to
         the master."""
         return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
+    
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        """Determine if the migration operation is allowed to run on the database with alias db."""
+        if db in settings.SLAVE_DATABASES:
+            return False
+        return True
