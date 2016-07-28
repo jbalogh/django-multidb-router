@@ -79,7 +79,7 @@ class MasterSlaveRouter(object):
         """Only allow syncdb on the master."""
         return db == DEFAULT_DB_ALIAS
 
-    def allow_migrate(db, app_label, model_name=None, **hints):
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
         """Determine if the migration operation is allowed to run on the database with alias db."""
         if db in settings.SLAVE_DATABASES:
             return False
