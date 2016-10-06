@@ -80,7 +80,7 @@ class MasterSlaveRouter(object):
         return db == DEFAULT_DB_ALIAS
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        """Determine if the migration operation is allowed to run on the database with alias db."""
+        """Check if the migration operation is allowed to run."""
         if db in settings.SLAVE_DATABASES:
             return False
         return True
@@ -100,7 +100,7 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
         return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
     
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        """Determine if the migration operation is allowed to run on the database with alias db."""
+        """Check if the migration operation is allowed to run."""
         if db in settings.SLAVE_DATABASES:
             return False
         return True
