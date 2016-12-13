@@ -171,6 +171,8 @@ class UseMasterTests(TestCase):
         check()
         assert not this_thread_is_pinned()
 
+        self.fail('test failing tests')
+
     def test_decorator_resets(self):
         @use_master
         def check():
