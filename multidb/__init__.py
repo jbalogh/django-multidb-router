@@ -79,6 +79,11 @@ class MasterSlaveRouter(object):
         """Only allow syncdb on the master."""
         return db == DEFAULT_DB_ALIAS
 
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        """Check if the migration operation is allowed to run."""
+        if db in settings.SLAVE_DATABASES:
+            return False
+        return True
 
 class PinningMasterSlaveRouter(MasterSlaveRouter):
     """Router that sends reads to master iff a certain flag is set. Writes
@@ -93,3 +98,9 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
         """Send reads to slaves in round-robin unless this thread is "stuck" to
         the master."""
         return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
+    
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        """Check if the migration operation is allowed to run."""
+        if db in settings.SLAVE_DATABASES:
+            return False
+        return True
