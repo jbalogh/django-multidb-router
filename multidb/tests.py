@@ -36,6 +36,13 @@ class MasterSlaveRouterTests(TestCase):
         assert router.allow_syncdb(DEFAULT_DB_ALIAS, None)
         assert not router.allow_syncdb(get_slave(), None)
 
+    def test_allow_migrate(self):
+        """Make sure allow_migrate() does the right thing for both masters and
+        slaves"""
+        router = MasterSlaveRouter()
+        assert router.allow_migrate(DEFAULT_DB_ALIAS, 'dummy')
+        assert not router.allow_migrate(get_slave(), 'dummy')
+
 
 class SettingsTests(TestCase):
     """Tests for settings defaults"""

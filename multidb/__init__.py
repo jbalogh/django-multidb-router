@@ -75,13 +75,16 @@ class MasterSlaveRouter(object):
         """Allow all relations, so FK validation stays quiet."""
         return True
 
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        return db == DEFAULT_DB_ALIAS
+
     def allow_syncdb(self, db, model):
         """Only allow syncdb on the master."""
         return db == DEFAULT_DB_ALIAS
 
 
 class PinningMasterSlaveRouter(MasterSlaveRouter):
-    """Router that sends reads to master iff a certain flag is set. Writes
+    """Router that sends reads to master if a certain flag is set. Writes
     always go to master.
 
     Typically, we set a cookie in middleware for certain request HTTP methods
