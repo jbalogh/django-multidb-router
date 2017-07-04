@@ -1,10 +1,46 @@
 sudo: false
 language: python
-python:
- - "2.6"
- - "2.7"
- - "3.2"
- - "3.3"
- - "3.4"
-install: pip install -r requirements.txt
-script: ./run.sh test
+
+matrix:
+    include:
+      - python: "2.7"
+        env: TOX_ENV=py27-django15
+      - python: "2.7"
+        env: TOX_ENV=py27-django16
+      - python: "2.7"
+        env: TOX_ENV=py27-django17
+      - python: "2.7"
+        env: TOX_ENV=py27-django18
+      - python: "2.7"
+        env: TOX_ENV=py27-django19
+      - python: "2.7"
+        env: TOX_ENV=py27-django110
+      - python: "3.3"
+        env: TOX_ENV=py33-django17
+      - python: "3.3"
+        env: TOX_ENV=py33-django18
+      - python: "3.4"
+        env: TOX_ENV=py34-django17
+      - python: "3.4"
+        env: TOX_ENV=py34-django18
+      - python: "3.4"
+        env: TOX_ENV=py34-django19
+      - python: "3.4"
+        env: TOX_ENV=py34-django110
+      - python: "3.5"
+        env: TOX_ENV=py35-django18
+      - python: "3.5"
+        env: TOX_ENV=py35-django19
+      - python: "3.5"
+        env: TOX_ENV=py35-django110
+      - python: "3.6"
+        env: TOX_ENV=py36-django18
+      - python: "3.6"
+        env: TOX_ENV=py36-django19
+      - python: "3.6"
+        env: TOX_ENV=py36-django110
+      - python: "2.7"
+        env: TOX_ENV=flake8
+script: tox -e $TOX_ENV
+install:
+    - pip install tox
