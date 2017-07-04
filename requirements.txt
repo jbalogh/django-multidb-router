@@ -1,2 +1,2 @@
 django-nose==1.4.4
-flake8==2.1.0
+flake8==3.3.0
