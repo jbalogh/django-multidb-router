@@ -78,7 +78,7 @@ class MasterSlaveRouter(object):
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         return db == DEFAULT_DB_ALIAS
 
-    def allow_syncdb(self, db, model):
+    def allow_migrate(self, db, app_label, model=None, **hints):
         """Only allow syncdb on the master."""
         return db == DEFAULT_DB_ALIAS
 
