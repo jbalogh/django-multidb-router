@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+Version 0.7
+-----------
+
+- Added support for Django up to 1.11
+- Dropped official support for Django 1.7 and lower
+
 Version 0.6
 -----------
 

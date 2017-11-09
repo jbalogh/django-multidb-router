@@ -1,6 +1,6 @@
+from __future__ import unicode_literals
 import sys
 import os
-from __future__ import unicode_literals
 
 sys.path.append(os.path.abspath('..'))
 
@@ -21,13 +21,13 @@ copyright = '2015, The Zamboni Collective'
 # built documents.
 #
 # The short X.Y version.
-version = '0.6'
+version = '0.7'
 # The full version, including alpha/beta/rc tags.
-release = '0.6.0'
+release = '0.7.0'
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
 exclude_trees = ['_build']
 
 # The name of the Pygments (syntax highlighting) style to use.
-#pygments_style = 'sphinx'
+# pygments_style = 'sphinx'
