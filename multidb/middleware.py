@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from .pinning import pin_this_thread, unpin_this_thread
+from .pinning import pin_this_thread, unpin_this_thread, clean_current_db
 
 
 # The name of the cookie that directs a request's reads to the master DB
@@ -12,6 +12,7 @@ PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
 # write
 PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 
+SAME_DB_IN_REQUEST = int(getattr(settings, 'MULTIDB_SAME_DB_IN_REQUEST', False))
 
 READ_ONLY_METHODS = frozenset(['GET', 'TRACE', 'HEAD', 'OPTIONS'])
 
@@ -36,6 +37,9 @@ class PinningRouterMiddleware(object):
         else:
             # In case the last request this thread served was pinned:
             unpin_this_thread()
+            if SAME_DB_IN_REQUEST:
+                # Cleans current db, will be set in first router call
+                clean_current_db()
 
     def process_response(self, request, response):
         """For some HTTP methods, assume there was a DB write and set the
