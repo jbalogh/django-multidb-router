@@ -40,7 +40,7 @@ from .pinning import this_thread_is_pinned, db_write  # noqa
 DEFAULT_DB_ALIAS = 'default'
 
 
-if getattr(settings, 'SLAVE_DATABASES'):
+if hasattr(settings, 'SLAVE_DATABASES'):
     # Shuffle the list so the first slave db isn't slammed during startup.
     dbs = list(settings.SLAVE_DATABASES)
     random.shuffle(dbs)
