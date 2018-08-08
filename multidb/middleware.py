@@ -1,5 +1,11 @@
 from django.conf import settings
-from django.utils.deprecation import MiddlewareMixin
+
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    class MiddlewareMixin(object):
+        """Dummy class not to break compatibility with django 1.8"""
+        pass
 
 from .pinning import pin_this_thread, unpin_this_thread
 
