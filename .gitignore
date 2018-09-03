@@ -1,5 +1,6 @@
 docs/_build
 *.py[co]
 *.swp
+build/
 dist/
 *.egg-info
