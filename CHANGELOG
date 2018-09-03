@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+Version 0.8
+-----------
+
+- Dropped support for Python 3.3
+- Added support for modern django MIDDLEWARE setting, keeping
+  backwards-compatibility
+
 Version 0.7
 -----------
 

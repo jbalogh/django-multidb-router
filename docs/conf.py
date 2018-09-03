@@ -21,9 +21,9 @@ copyright = '2015, The Zamboni Collective'
 # built documents.
 #
 # The short X.Y version.
-version = '0.7'
+version = '0.8'
 # The full version, including alpha/beta/rc tags.
-release = '0.7.0'
+release = '0.8.0'
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
