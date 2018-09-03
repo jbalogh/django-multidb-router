@@ -1,5 +1,12 @@
 from django.conf import settings
 
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    class MiddlewareMixin(object):
+        """Dummy class not to break compatibility with django 1.8"""
+        pass
+
 from .pinning import pin_this_thread, unpin_this_thread
 
 
@@ -16,7 +23,7 @@ PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 READ_ONLY_METHODS = frozenset(['GET', 'TRACE', 'HEAD', 'OPTIONS'])
 
 
-class PinningRouterMiddleware(object):
+class PinningRouterMiddleware(MiddlewareMixin):
     """Middleware to support the PinningMasterSlaveRouter
 
     Attaches a cookie to a user agent who has just written, causing subsequent
