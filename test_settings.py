@@ -11,11 +11,11 @@ MIDDLEWARE_CLASSES = (
 # The default database should point to the master.
 DATABASES = {
     'default': {
-        'NAME': 'master',
+        'NAME': 'master.sqlite',
         'ENGINE': 'django.db.backends.sqlite3',
     },
     'slave': {
-        'NAME': 'slave',
+        'NAME': 'slave.sqlite',
         'ENGINE': 'django.db.backends.sqlite3',
     },
 }
@@ -25,5 +25,5 @@ SLAVE_DATABASES = ['slave']
 
 # If you use PinningMasterSlaveRouter and its associated middleware, you can
 # customize the cookie name and its lifetime like so:
-# MULTIDB_PINNING_COOKIE = 'multidb_pin_writes"
+# MULTIDB_PINNING_COOKIE = "multidb_pin_writes"
 # MULTIDB_PINNING_SECONDS = 15

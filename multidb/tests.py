@@ -215,11 +215,14 @@ class UseMasterTests(TestCase):
         thread2_lock = Lock()
         thread1_lock.acquire()
         thread2_lock.acquire()
+        orchestrator = Lock()
+        orchestrator.acquire()
 
         pinned = {}
 
         def thread1_worker():
             with use_master:
+                orchestrator.release()
                 thread1_lock.acquire()
 
             pinned[1] = this_thread_is_pinned()
@@ -227,18 +230,22 @@ class UseMasterTests(TestCase):
         def thread2_worker():
             pin_this_thread()
             with use_master:
+                orchestrator.release()
                 thread2_lock.acquire()
 
             pinned[2] = this_thread_is_pinned()
+            orchestrator.release()
 
         thread1 = Thread(target=thread1_worker)
         thread2 = Thread(target=thread2_worker)
 
         # thread1 starts, entering `use_master` from an unpinned state
         thread1.start()
+        orchestrator.acquire()
 
         # thread2 starts, entering `use_master` from a pinned state
         thread2.start()
+        orchestrator.acquire()
 
         # thread2 finishes, returning to a pinned state
         thread2_lock.release()
