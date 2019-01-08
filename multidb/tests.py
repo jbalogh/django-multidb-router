@@ -1,15 +1,24 @@
+import warnings
 from threading import Lock, Thread
 from django.http import HttpRequest, HttpResponse
 from django.test import TestCase
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 from nose.tools import eq_
 
-from multidb import (DEFAULT_DB_ALIAS, MasterSlaveRouter,
-                     PinningMasterSlaveRouter, get_slave)
+# For deprecation tests
+import multidb
+import multidb.pinning
+
+from multidb import (DEFAULT_DB_ALIAS, ReplicaRouter, PinningReplicaRouter,
+                     get_replica)
 from multidb.middleware import (PINNING_COOKIE, PINNING_SECONDS,
                                 PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned, pin_this_thread,
-                             unpin_this_thread, use_master, db_write)
+                             unpin_this_thread, use_primary_db, db_write)
 
 
 class UnpinningTestCase(TestCase):
@@ -19,33 +28,28 @@ class UnpinningTestCase(TestCase):
         unpin_this_thread()
 
 
-class MasterSlaveRouterTests(TestCase):
-    """Tests for MasterSlaveRouter"""
+class ReplicaRouterTests(TestCase):
 
     def test_db_for_read(self):
-        eq_(MasterSlaveRouter().db_for_read(None), get_slave())
+        eq_(ReplicaRouter().db_for_read(None), get_replica())
         # TODO: Test the round-robin functionality.
 
     def test_db_for_write(self):
-        eq_(MasterSlaveRouter().db_for_write(None), DEFAULT_DB_ALIAS)
+        eq_(ReplicaRouter().db_for_write(None), DEFAULT_DB_ALIAS)
 
     def test_allow_syncdb(self):
-        """Make sure allow_syncdb() does the right thing for both masters and
-        slaves"""
-        router = MasterSlaveRouter()
+        router = ReplicaRouter()
         assert router.allow_syncdb(DEFAULT_DB_ALIAS, None)
-        assert not router.allow_syncdb(get_slave(), None)
+        assert not router.allow_syncdb(get_replica(), None)
 
     def test_allow_migrate(self):
-        """Make sure allow_migrate() does the right thing for both masters and
-        slaves"""
-        router = MasterSlaveRouter()
+        router = ReplicaRouter()
         assert router.allow_migrate(DEFAULT_DB_ALIAS, 'dummy')
-        assert not router.allow_migrate(get_slave(), 'dummy')
+        assert not router.allow_migrate(get_replica(), 'dummy')
 
 
 class SettingsTests(TestCase):
-    """Tests for settings defaults"""
+    """Tests for default settings."""
 
     def test_cookie_default(self):
         """Check that the cookie name has the right default."""
@@ -58,7 +62,7 @@ class SettingsTests(TestCase):
 
 class PinningTests(UnpinningTestCase):
     """Tests for "pinning" functionality, above and beyond what's inherited
-    from MasterSlaveRouter"""
+    from ReplicaRouter."""
 
     def test_pinning_encapsulation(self):
         """Check the pinning getters and setters."""
@@ -74,11 +78,11 @@ class PinningTests(UnpinningTestCase):
             "Thread remained pinned after unpin_this_thread()."
 
     def test_pinned_reads(self):
-        """Test PinningMasterSlaveRouter.db_for_read() when pinned and when
+        """Test PinningReplicaRouter.db_for_read() when pinned and when
         not."""
-        router = PinningMasterSlaveRouter()
+        router = PinningReplicaRouter()
 
-        eq_(router.db_for_read(None), get_slave())
+        eq_(router.db_for_read(None), get_replica())
 
         pin_this_thread()
         eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
@@ -86,7 +90,7 @@ class PinningTests(UnpinningTestCase):
     def test_db_write_decorator(self):
 
         def read_view(req):
-            eq_(router.db_for_read(None), get_slave())
+            eq_(router.db_for_read(None), get_replica())
             return HttpResponse()
 
         @db_write
@@ -94,8 +98,8 @@ class PinningTests(UnpinningTestCase):
             eq_(router.db_for_read(None), DEFAULT_DB_ALIAS)
             return HttpResponse()
 
-        router = PinningMasterSlaveRouter()
-        eq_(router.db_for_read(None), get_slave())
+        router = PinningReplicaRouter()
+        eq_(router.db_for_read(None), get_replica())
         write_view(HttpRequest())
         read_view(HttpRequest())
 
@@ -168,9 +172,9 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
 
 
-class UseMasterTests(TestCase):
+class UsePrimaryDBTests(TestCase):
     def test_decorator(self):
-        @use_master
+        @use_primary_db
         def check():
             assert this_thread_is_pinned()
         unpin_this_thread()
@@ -179,7 +183,7 @@ class UseMasterTests(TestCase):
         assert not this_thread_is_pinned()
 
     def test_decorator_resets(self):
-        @use_master
+        @use_primary_db
         def check():
             assert this_thread_is_pinned()
         pin_this_thread()
@@ -190,14 +194,14 @@ class UseMasterTests(TestCase):
     def test_context_manager(self):
         unpin_this_thread()
         assert not this_thread_is_pinned()
-        with use_master:
+        with use_primary_db:
             assert this_thread_is_pinned()
         assert not this_thread_is_pinned()
 
     def test_context_manager_resets(self):
         pin_this_thread()
         assert this_thread_is_pinned()
-        with use_master:
+        with use_primary_db:
             assert this_thread_is_pinned()
         assert this_thread_is_pinned()
 
@@ -205,7 +209,7 @@ class UseMasterTests(TestCase):
         unpin_this_thread()
         assert not this_thread_is_pinned()
         with self.assertRaises(ValueError):
-            with use_master:
+            with use_primary_db:
                 assert this_thread_is_pinned()
                 raise ValueError
         assert not this_thread_is_pinned()
@@ -221,7 +225,7 @@ class UseMasterTests(TestCase):
         pinned = {}
 
         def thread1_worker():
-            with use_master:
+            with use_primary_db:
                 orchestrator.release()
                 thread1_lock.acquire()
 
@@ -229,7 +233,7 @@ class UseMasterTests(TestCase):
 
         def thread2_worker():
             pin_this_thread()
-            with use_master:
+            with use_primary_db:
                 orchestrator.release()
                 thread2_lock.acquire()
 
@@ -239,11 +243,11 @@ class UseMasterTests(TestCase):
         thread1 = Thread(target=thread1_worker)
         thread2 = Thread(target=thread2_worker)
 
-        # thread1 starts, entering `use_master` from an unpinned state
+        # thread1 starts, entering `use_primary_db` from an unpinned state
         thread1.start()
         orchestrator.acquire()
 
-        # thread2 starts, entering `use_master` from a pinned state
+        # thread2 starts, entering `use_primary_db` from a pinned state
         thread2.start()
         orchestrator.acquire()
 
@@ -256,3 +260,40 @@ class UseMasterTests(TestCase):
         thread1_lock.release()
         thread1.join()
         self.assertEqual(pinned[1], False)
+
+
+class DeprecationTestCase(TestCase):
+    def test_masterslaverouter(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            router = multidb.MasterSlaveRouter()
+        assert isinstance(router, ReplicaRouter)
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+
+    def test_pinningmasterslaverouter(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            router = multidb.PinningMasterSlaveRouter()
+        assert isinstance(router, PinningReplicaRouter)
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+
+    @mock.patch.object(multidb, 'get_replica')
+    def test_get_slave(self, mock_get_replica):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            multidb.get_slave()
+        assert mock_get_replica.called
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+
+    def test_use_master(self):
+        assert isinstance(multidb.pinning.use_master,
+                          use_primary_db.__class__)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            with multidb.pinning.use_master:
+                pass
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)

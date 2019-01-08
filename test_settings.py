@@ -8,22 +8,22 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware'
 )
 
-# The default database should point to the master.
+# The default database should point to the read/write primary.
 DATABASES = {
     'default': {
-        'NAME': 'master.sqlite',
+        'NAME': 'primary.sqlite',
         'ENGINE': 'django.db.backends.sqlite3',
     },
-    'slave': {
-        'NAME': 'slave.sqlite',
+    'replica': {
+        'NAME': 'replica.sqlite',
         'ENGINE': 'django.db.backends.sqlite3',
     },
 }
 
-# Put the aliases for slave databases in this list.
-SLAVE_DATABASES = ['slave']
+# Put the aliases for replica databases in this list.
+REPLICA_DATABASES = ['replica']
 
-# If you use PinningMasterSlaveRouter and its associated middleware, you can
+# If you use PinningReplicaRouter and its associated middleware, you can
 # customize the cookie name and its lifetime like so:
 # MULTIDB_PINNING_COOKIE = "multidb_pin_writes"
 # MULTIDB_PINNING_SECONDS = 15
