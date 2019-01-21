@@ -1,9 +1,9 @@
 """
-With :class:`multidb.MasterSlaveRouter` all read queries will go to a slave
+With :class:`multidb.ReplicaRouter` all read queries will go to a replica
 database;  all inserts, updates, and deletes will do to the ``default``
 database.
 
-First, define ``SLAVE_DATABASES`` in your settings.  It should be a list of
+First, define ``REPLICA_DATABASES`` in your settings.  It should be a list of
 database aliases that can be found in ``DATABASES``::
 
     DATABASES = {
@@ -11,24 +11,25 @@ database aliases that can be found in ``DATABASES``::
         'shadow-1': {...},
         'shadow-2': {...},
     }
-    SLAVE_DATABASES = ['shadow-1', 'shadow-2']
+    REPLICA_DATABASES = ['shadow-1', 'shadow-2']
 
-Then put ``multidb.MasterSlaveRouter`` into DATABASE_ROUTERS::
+Then put ``multidb.ReplicaRouter`` into DATABASE_ROUTERS::
 
-    DATABASE_ROUTERS = ('multidb.MasterSlaveRouter',)
+    DATABASE_ROUTERS = ('multidb.ReplicaRouter',)
 
-The slave databases will be chosen in round-robin fashion.
+The replica databases will be chosen in round-robin fashion.
 
-If you want to get a connection to a slave in your app, use
-:func:`multidb.get_slave`::
+If you want to get a connection to a replica in your app, use
+:func:`multidb.get_replica`::
 
     from django.db import connections
     import multidb
 
-    connection = connections[multidb.get_slave()]
+    connection = connections[multidb.get_replica()]
 """
 import itertools
 import random
+import warnings
 
 from django.conf import settings
 
@@ -38,29 +39,76 @@ from .pinning import this_thread_is_pinned, db_write  # noqa
 DEFAULT_DB_ALIAS = 'default'
 
 
-if getattr(settings, 'SLAVE_DATABASES'):
-    # Shuffle the list so the first slave db isn't slammed during startup.
-    dbs = list(settings.SLAVE_DATABASES)
+replicas = None
+
+
+def _get_replica_list():
+    global replicas
+    if replicas is not None:
+        return replicas
+
+    dbs = None
+    if hasattr(settings, 'REPLICA_DATABASES'):
+        dbs = list(settings.REPLICA_DATABASES)
+    elif hasattr(settings, 'SLAVE_DATABASES'):
+        warnings.warn(
+            '[multidb] The SLAVE_DATABASES setting has been deprecated. '
+            'Please switch to the REPLICA_DATABASES setting.',
+            DeprecationWarning,
+        )
+        dbs = list(settings.SLAVE_DATABASES)
+
+    if not dbs:
+        warnings.warn(
+            '[multidb] No replica databases are configured! '
+            'You can configure them with the REPLICA_DATABASES setting.',
+            UserWarning,
+        )
+        replicas = itertools.repeat(DEFAULT_DB_ALIAS)
+        return replicas
+
+    # Shuffle the list so the first replica isn't slammed during startup.
     random.shuffle(dbs)
-    slaves = itertools.cycle(dbs)
-    # Set the slaves as test mirrors of the master.
+
+    # Set the replicas as test mirrors of the master.
     for db in dbs:
         settings.DATABASES[db].get('TEST', {})['MIRROR'] = DEFAULT_DB_ALIAS
-else:
-    slaves = itertools.repeat(DEFAULT_DB_ALIAS)
+
+    replicas = itertools.cycle(dbs)
+    return replicas
+
+
+def get_replica():
+    """Returns the alias of a replica database."""
+    return next(_get_replica_list())
 
 
 def get_slave():
-    """Returns the alias of a slave database."""
-    return next(slaves)
+    warnings.warn(
+        '[multidb] The get_slave() method has been deprecated. '
+        'Please switch to the get_replica() method.',
+        DeprecationWarning,
+    )
+    return get_replica()
 
 
-class MasterSlaveRouter(object):
-    """Router that sends all reads to a slave, all writes to default."""
+class DeprecationMixin(object):
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            '[multidb] The MasterSlaveRouter and PinningMasterSlaveRouter '
+            'classes have been deprecated. Please switch to the ReplicaRouter '
+            'and PinningReplicaRouter classes respectively.',
+            DeprecationWarning,
+        )
+        super(DeprecationMixin, self).__init__(*args, **kwargs)
+
+
+class ReplicaRouter(object):
+    """Router that sends all reads to a replica, all writes to default."""
 
     def db_for_read(self, model, **hints):
-        """Send reads to slaves in round-robin."""
-        return get_slave()
+        """Send reads to replicas in round-robin."""
+        return get_replica()
 
     def db_for_write(self, model, **hints):
         """Send all writes to the master."""
@@ -78,7 +126,7 @@ class MasterSlaveRouter(object):
         return db == DEFAULT_DB_ALIAS
 
 
-class PinningMasterSlaveRouter(MasterSlaveRouter):
+class PinningReplicaRouter(ReplicaRouter):
     """Router that sends reads to master if a certain flag is set. Writes
     always go to master.
 
@@ -88,6 +136,14 @@ class PinningMasterSlaveRouter(MasterSlaveRouter):
 
     """
     def db_for_read(self, model, **hints):
-        """Send reads to slaves in round-robin unless this thread is "stuck" to
+        """Send reads to replicas in round-robin unless this thread is "stuck" to
         the master."""
-        return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_slave()
+        return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_replica()
+
+
+class MasterSlaveRouter(DeprecationMixin, ReplicaRouter):
+    pass
+
+
+class PinningMasterSlaveRouter(DeprecationMixin, PinningReplicaRouter):
+    pass

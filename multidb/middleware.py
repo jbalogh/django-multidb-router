@@ -24,7 +24,7 @@ READ_ONLY_METHODS = frozenset(['GET', 'TRACE', 'HEAD', 'OPTIONS'])
 
 
 class PinningRouterMiddleware(MiddlewareMixin):
-    """Middleware to support the PinningMasterSlaveRouter
+    """Middleware to support the PinningReplicaRouter
 
     Attaches a cookie to a user agent who has just written, causing subsequent
     DB reads (for some period of time, hopefully exceeding replication lag)

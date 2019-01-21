@@ -14,7 +14,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=["Django>=1.11"],
-    test_requires=['Fabric', 'django-nose'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

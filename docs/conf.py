@@ -14,7 +14,7 @@ extensions = ['sphinx.ext.autodoc']
 
 # General information about the project.
 project = 'multidb-router'
-copyright = '2015, The Zamboni Collective'
+copyright = '2019, The Zamboni Collective'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
