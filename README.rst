@@ -1,15 +1,15 @@
-``multidb`` provides two Django database routers useful in master-slave
+``multidb`` provides two Django database routers useful in primary-replica database
 deployments.
 
 
-MasterSlaveRouter
+ReplicaRouter
 -----------------
 
-With ``multidb.MasterSlaveRouter`` all read queries will go to a slave
+With ``multidb.ReplicaRouter`` all read queries will go to a replica
 database;  all inserts, updates, and deletes will go to the ``default``
 database.
 
-First, define ``SLAVE_DATABASES`` in your settings.  It should be a list of
+First, define ``REPLICA_DATABASES`` in your settings.  It should be a list of
 database aliases that can be found in ``DATABASES``::
 
     DATABASES = {
@@ -17,32 +17,32 @@ database aliases that can be found in ``DATABASES``::
         'shadow-1': {...},
         'shadow-2': {...},
     }
-    SLAVE_DATABASES = ['shadow-1', 'shadow-2']
+    REPLICA_DATABASES = ['shadow-1', 'shadow-2']
 
-Then put ``multidb.MasterSlaveRouter`` into DATABASE_ROUTERS::
+Then put ``multidb.ReplicaRouter`` into DATABASE_ROUTERS::
 
-    DATABASE_ROUTERS = ('multidb.MasterSlaveRouter',)
+    DATABASE_ROUTERS = ('multidb.ReplicaRouter',)
 
-The slave databases will be chosen in round-robin fashion.
+The replica databases will be chosen in round-robin fashion.
 
-If you want to get a connection to a slave in your app, use
-``multidb.get_slave``::
+If you want to get a connection to a replica in your app, use
+``multidb.get_replica``::
 
     from django.db import connections
     import multidb
 
-    connection = connections[multidb.get_slave()]
+    connection = connections[multidb.get_replica()]
 
 
-PinningMasterSlaveRouter
+PinningReplicaRouter
 ------------------------
 
-In some applications, the lag between the master receiving a write and its
-replication to the slaves is enough to cause inconsistency for the end user.
+In some applications, the lag between the primary database receiving a write and its
+replication to the replicas is enough to cause inconsistency for the end user.
 For example, imagine a scenario with 1 second of replication lag. If a user
-makes a forum post (to the master) and then is redirected to a fully-rendered
-view of it (from a slave) 500ms later, the view will fail. If this is a problem
-in your application, consider using ``multidb.PinningMasterSlaveRouter``. This
+makes a forum post (to the primary) and then is redirected to a fully-rendered
+view of it (from a replica) 500ms later, the view will fail. If this is a problem
+in your application, consider using ``multidb.PinningReplicaRouter``. This
 router works in combination with ``multidb.middleware.PinningRouterMiddleware``
 to assure that, after writing to the ``default`` database, future reads from
 the same user agent are directed to the ``default`` database for a configurable
@@ -64,10 +64,10 @@ request, but only in the next request.
 Configuration
 =============
 
-To use ``PinningMasterSlaveRouter``, put it into ``DATABASE_ROUTERS`` in your
+To use ``PinningReplicaRouter``, put it into ``DATABASE_ROUTERS`` in your
 settings::
 
-    DATABASE_ROUTERS = ('multidb.PinningMasterSlaveRouter',)
+    DATABASE_ROUTERS = ('multidb.PinningReplicaRouter',)
 
 Then, install the middleware. It must be listed before any other middleware
 which performs database writes::
@@ -90,25 +90,25 @@ setting::
     MULTIDB_PINNING_COOKIE = 'multidb_pin_writes'
 
 
-``use_master``
+``use_primary_db``
 ==============
 
-``multidb.pinning.use_master`` is both a context manager and a decorator for
-wrapping code to use the master database. You can use it as a context manager::
+``multidb.pinning.use_primary_db`` is both a context manager and a decorator for
+wrapping code to use the primary database. You can use it as a context manager::
 
-    from multidb.pinning import use_master
+    from multidb.pinning import use_primary_db
 
-    with use_master:
+    with use_primary_db:
         touch_the_database()
     touch_another_database()
 
 or as a decorator::
 
-    from multidb.pinning import use_master
+    from multidb.pinning import use_primary_db
 
-    @use_master
+    @use_primary_db
     def func(*args, **kw):
-        """Touches the master database."""
+        """Touches the primary database."""
 
 
 Running the Tests
