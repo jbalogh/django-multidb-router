@@ -1,4 +1,4 @@
-``multidb`` provides two Django database routers useful in replica
+``multidb`` provides two Django database routers useful in primary-replica database
 deployments.
 
 
