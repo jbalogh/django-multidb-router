@@ -1,10 +1,12 @@
 CHANGELOG
 =========
 
-master
+Version 0.9
 -----------
 
-- Drop support of Python 3.4
+- Deprecate master/slave terminology and switch to replica. #44
+- Fix bug and warn when REPLICA_DATABASES is not defined. #39
+- Drop support of Python 3.4. #43 etc
 - Confirm support of Python 3.7
 - Drop support of Django 1.8
 - Drop support of Django 1.10

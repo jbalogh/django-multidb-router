@@ -36,6 +36,9 @@ from django.conf import settings
 from .pinning import this_thread_is_pinned, db_write  # noqa
 
 
+VERSION = (0, 9, 0)
+__version__ = '.'.join(map(str, VERSION))
+
 DEFAULT_DB_ALIAS = 'default'
 
 
