@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+Version 0.10
+-----------
+
+- Run tests for Django 2.2 and Python 3.5, 3.6 and 3.7
+
 Version 0.9
 -----------
 
