@@ -15,8 +15,9 @@ import multidb.pinning
 
 from multidb import (DEFAULT_DB_ALIAS, ReplicaRouter, PinningReplicaRouter,
                      get_replica)
-from multidb.middleware import (PINNING_COOKIE, PINNING_SECONDS,
-                                PinningRouterMiddleware)
+from multidb.middleware import (PINNING_COOKIE, PINNING_COOKIE_HTTPONLY,
+                                PINNING_COOKIE_SAMESITE, PINNING_COOKIE_SECURE,
+                                PINNING_SECONDS, PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned, pin_this_thread,
                              unpin_this_thread, use_primary_db, db_write)
 
@@ -58,6 +59,12 @@ class SettingsTests(TestCase):
     def test_pinning_seconds_default(self):
         """Make sure the cookie age has the right default."""
         eq_(PINNING_SECONDS, 15)
+
+    def test_pinning_cookie_default_attributes(self):
+        """Check that the pinning cookie has the right default attributes."""
+        eq_(PINNING_COOKIE_SECURE, False)
+        eq_(PINNING_COOKIE_HTTPONLY, False)
+        eq_(PINNING_COOKIE_SAMESITE, 'Lax')
 
 
 class PinningTests(UnpinningTestCase):
