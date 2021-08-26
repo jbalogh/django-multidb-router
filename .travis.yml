@@ -6,44 +6,56 @@ language: python
 
 matrix:
     include:
-      - python: "2.7"
-        env: TOX_ENV=py27-django111
+      - python: 3.5
+        env: TOX_ENV=ppy35-2.2.X
 
-      - python: "3.5"
-        env: TOX_ENV=py35-django111
+      - python: 3.6
+        env: TOX_ENV=ppy36-2.2.X
 
-      - python: "3.6"
-        env: TOX_ENV=py36-django111
+      - python: 3.7
+        env: TOX_ENV=ppy37-2.2.X
 
-      - python: "3.7"
-        env: TOX_ENV=py37-django111
+      - python: 3.8
+        env: TOX_ENV=ppy38-2.2.X
 
-      - python: "3.5"
-        env: TOX_ENV=py35-django20
+      - python: 3.9
+        env: TOX_ENV=ppy39-2.2.X
 
-      - python: "3.6"
-        env: TOX_ENV=py36-django20
+      - python: 3.6
+        env: TOX_ENV=ppy36-3.0.X
 
-      - python: "3.7"
-        env: TOX_ENV=py37-django20
+      - python: 3.7
+        env: TOX_ENV=ppy37-3.0.X
 
-      - python: "3.5"
-        env: TOX_ENV=py35-django21
+      - python: 3.8
+        env: TOX_ENV=ppy38-3.0.X
 
-      - python: "3.6"
-        env: TOX_ENV=py36-django21
+      - python: 3.9
+        env: TOX_ENV=ppy39-3.0.X
 
-      - python: "3.7"
-        env: TOX_ENV=py37-django21
+      - python: 3.6
+        env: TOX_ENV=ppy36-3.1.X
 
-      - python: "3.5"
-        env: TOX_ENV=py35-django22
+      - python: 3.7
+        env: TOX_ENV=ppy37-3.1.X
 
-      - python: "3.6"
-        env: TOX_ENV=py36-django22
+      - python: 3.8
+        env: TOX_ENV=ppy38-3.1.X
 
-      - python: "3.7"
-        env: TOX_ENV=py37-django22
+      - python: 3.9
+        env: TOX_ENV=ppy39-3.1.X
+
+      - python: 3.6
+        env: TOX_ENV=ppy36-3.2.X
+
+      - python: 3.7
+        env: TOX_ENV=ppy37-3.2.X
+
+      - python: 3.8
+        env: TOX_ENV=ppy38-3.2.X
+
+      - python: 3.9
+        env: TOX_ENV=ppy39-3.2.X
 
 install:
     - pip install tox
