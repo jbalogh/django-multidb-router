@@ -1,11 +1,11 @@
 CHANGELOG
 =========
 
-Version 0.11
+Version 0.10
 -----------
 
-- Run tests for Django 3.x, Python 3.8 and 3.9
-- Drop support for Django 1.x, 2.1, 2.2
+- Run tests for Django 2.2.x, Django 3.x, Python 3.8 and 3.9
+- Drop support for Django 1.x and 2.1
 - Drop support for Python 2.7
 
 Version 0.10
