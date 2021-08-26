@@ -1,3 +1,15 @@
+django-multidb-router
+=====================
+
+.. image:: https://img.shields.io/github/workflow/status/jbalogh/django-multidb-router/CI?label=CI&logo=github&branch=master
+    :alt: Build Status
+    :target: https://github.com/jbalogh/django-multidb-router/actions?query=workflow%3ACI
+
+
+.. image:: https://img.shields.io/pypi/v/django-multidb-router.svg
+    :target: https://pypi.python.org/pypi/django-multidb-router
+
+
 ``multidb`` provides two Django database routers useful in primary-replica database
 deployments.
 
