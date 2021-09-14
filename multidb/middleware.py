@@ -14,9 +14,12 @@ from .pinning import pin_this_thread, unpin_this_thread
 PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
                          'multidb_pin_writes')
 # Determine cookie attributes based on settings, or their defaults.
-PINNING_COOKIE_HTTPONLY = getattr(settings, 'MULTIDB_PINNING_COOKIE_HTTPONLY', False)
-PINNING_COOKIE_SAMESITE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SAMESITE', "Lax")
-PINNING_COOKIE_SECURE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SECURE', False)
+PINNING_COOKIE_HTTPONLY = getattr(settings, 'MULTIDB_PINNING_COOKIE_HTTPONLY',
+                                  False)
+PINNING_COOKIE_SAMESITE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SAMESITE',
+                                  "Lax")
+PINNING_COOKIE_SECURE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SECURE',
+                                False)
 
 # The number of seconds for which reads are directed to the master DB after a
 # write

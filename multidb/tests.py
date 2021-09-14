@@ -154,6 +154,12 @@ class MiddlewareTests(UnpinningTestCase):
         assert PINNING_COOKIE in response.cookies
         eq_(response.cookies[PINNING_COOKIE]['max-age'],
             PINNING_SECONDS)
+        eq_(response.cookies[PINNING_COOKIE]['samesite'],
+            PINNING_COOKIE_SAMESITE)
+        eq_(response.cookies[PINNING_COOKIE]['httponly'],
+            PINNING_COOKIE_HTTPONLY or '')
+        eq_(response.cookies[PINNING_COOKIE]['secure'],
+            PINNING_COOKIE_SECURE or '')
 
     def test_attribute(self):
         """The cookie should get set if the _db_write attribute is True."""
