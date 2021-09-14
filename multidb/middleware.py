@@ -13,7 +13,10 @@ from .pinning import pin_this_thread, unpin_this_thread
 # The name of the cookie that directs a request's reads to the master DB
 PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
                          'multidb_pin_writes')
-
+# Determine cookie attributes based on settings, or their defaults.
+PINNING_COOKIE_HTTPONLY = getattr(settings, 'MULTIDB_PINNING_COOKIE_HTTPONLY', False)
+PINNING_COOKIE_SAMESITE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SAMESITE', "Lax")
+PINNING_COOKIE_SECURE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SECURE', False)
 
 # The number of seconds for which reads are directed to the master DB after a
 # write
@@ -53,6 +56,19 @@ class PinningRouterMiddleware(MiddlewareMixin):
         """
         if (request.method not in READ_ONLY_METHODS or
                 getattr(response, '_db_write', False)):
-            response.set_cookie(PINNING_COOKIE, value='y',
-                                max_age=PINNING_SECONDS)
+
+            # Older versions of Django don't support the SameSite attribute on
+            # cookies. If setting the cookie fails with a TypeError, then try
+            # setting the cookie without the samesite attribute.
+            try:
+                response.set_cookie(PINNING_COOKIE, value='y',
+                                    max_age=PINNING_SECONDS,
+                                    secure=PINNING_COOKIE_SECURE,
+                                    httponly=PINNING_COOKIE_HTTPONLY,
+                                    samesite=PINNING_COOKIE_SAMESITE)
+            except TypeError:
+                response.set_cookie(PINNING_COOKIE, value='y',
+                                    max_age=PINNING_SECONDS,
+                                    secure=PINNING_COOKIE_SECURE,
+                                    httponly=PINNING_COOKIE_HTTPONLY)
         return response
