@@ -10,20 +10,29 @@ except ImportError:
 from .pinning import pin_this_thread, unpin_this_thread
 
 
-# The name of the cookie that directs a request's reads to the master DB
-PINNING_COOKIE = getattr(settings, 'MULTIDB_PINNING_COOKIE',
-                         'multidb_pin_writes')
-# Determine cookie attributes based on settings, or their defaults.
-PINNING_COOKIE_HTTPONLY = getattr(settings, 'MULTIDB_PINNING_COOKIE_HTTPONLY',
-                                  False)
-PINNING_COOKIE_SAMESITE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SAMESITE',
-                                  "Lax")
-PINNING_COOKIE_SECURE = getattr(settings, 'MULTIDB_PINNING_COOKIE_SECURE',
-                                False)
+def pinning_cookie():
+    """The name of the cookie that directs a request's reads to the master DB.
+    """
+    return getattr(settings, 'MULTIDB_PINNING_COOKIE', 'multidb_pin_writes')
 
-# The number of seconds for which reads are directed to the master DB after a
-# write
-PINNING_SECONDS = int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
+
+def pinning_cookie_httponly():
+    return getattr(settings, 'MULTIDB_PINNING_COOKIE_HTTPONLY', False)
+
+
+def pinning_cookie_samesite():
+    return getattr(settings, 'MULTIDB_PINNING_COOKIE_SAMESITE', "Lax")
+
+
+def pinning_cookie_secure():
+    return getattr(settings, 'MULTIDB_PINNING_COOKIE_SECURE', False)
+
+
+def pinning_seconds():
+    """The number of seconds for which reads are directed to the master DB
+    after a write.
+    """
+    return int(getattr(settings, 'MULTIDB_PINNING_SECONDS', 15))
 
 
 READ_ONLY_METHODS = frozenset(['GET', 'TRACE', 'HEAD', 'OPTIONS'])
@@ -43,7 +52,7 @@ class PinningRouterMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Set the thread's pinning flag according to the presence of the
         incoming cookie."""
-        if (PINNING_COOKIE in request.COOKIES or
+        if (pinning_cookie() in request.COOKIES or
                 request.method not in READ_ONLY_METHODS):
             pin_this_thread()
         else:
@@ -59,9 +68,9 @@ class PinningRouterMiddleware(MiddlewareMixin):
         """
         if (request.method not in READ_ONLY_METHODS or
                 getattr(response, '_db_write', False)):
-            response.set_cookie(PINNING_COOKIE, value='y',
-                                max_age=PINNING_SECONDS,
-                                secure=PINNING_COOKIE_SECURE,
-                                httponly=PINNING_COOKIE_HTTPONLY,
-                                samesite=PINNING_COOKIE_SAMESITE)
+            response.set_cookie(pinning_cookie(), value='y',
+                                max_age=pinning_seconds(),
+                                secure=pinning_cookie_secure(),
+                                httponly=pinning_cookie_httponly(),
+                                samesite=pinning_cookie_samesite())
         return response

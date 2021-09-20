@@ -2,6 +2,7 @@ import warnings
 from threading import Lock, Thread
 from django.http import HttpRequest, HttpResponse
 from django.test import TestCase
+from django.test.utils import override_settings
 
 try:
     from unittest import mock
@@ -15,9 +16,9 @@ import multidb.pinning
 
 from multidb import (DEFAULT_DB_ALIAS, ReplicaRouter, PinningReplicaRouter,
                      get_replica)
-from multidb.middleware import (PINNING_COOKIE, PINNING_COOKIE_HTTPONLY,
-                                PINNING_COOKIE_SAMESITE, PINNING_COOKIE_SECURE,
-                                PINNING_SECONDS, PinningRouterMiddleware)
+from multidb.middleware import (pinning_cookie, pinning_cookie_httponly,
+                                pinning_cookie_samesite, pinning_cookie_secure,
+                                pinning_seconds, PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned, pin_this_thread,
                              unpin_this_thread, use_primary_db, db_write)
 
@@ -52,19 +53,25 @@ class ReplicaRouterTests(TestCase):
 class SettingsTests(TestCase):
     """Tests for default settings."""
 
-    def test_cookie_default(self):
+    def test_defaults(self):
         """Check that the cookie name has the right default."""
-        eq_(PINNING_COOKIE, 'multidb_pin_writes')
+        eq_(pinning_cookie(), 'multidb_pin_writes')
+        eq_(pinning_seconds(), 15)
+        eq_(pinning_cookie_secure(), False)
+        eq_(pinning_cookie_httponly(), False)
+        eq_(pinning_cookie_samesite(), 'Lax')
 
-    def test_pinning_seconds_default(self):
-        """Make sure the cookie age has the right default."""
-        eq_(PINNING_SECONDS, 15)
-
-    def test_pinning_cookie_default_attributes(self):
-        """Check that the pinning cookie has the right default attributes."""
-        eq_(PINNING_COOKIE_SECURE, False)
-        eq_(PINNING_COOKIE_HTTPONLY, False)
-        eq_(PINNING_COOKIE_SAMESITE, 'Lax')
+    @override_settings(MULTIDB_PINNING_COOKIE="override_pin_writes")
+    @override_settings(MULTIDB_PINNING_SECONDS=60)
+    @override_settings(MULTIDB_PINNING_COOKIE_SECURE=True)
+    @override_settings(MULTIDB_PINNING_COOKIE_HTTPONLY=True)
+    @override_settings(MULTIDB_PINNING_COOKIE_SAMESITE="Strict")
+    def test_overrides(self):
+        eq_(pinning_cookie(), "override_pin_writes")
+        eq_(pinning_seconds(), 60)
+        eq_(pinning_cookie_secure(), True)
+        eq_(pinning_cookie_httponly(), True)
+        eq_(pinning_cookie_samesite(), "Strict")
 
 
 class PinningTests(UnpinningTestCase):
@@ -123,7 +130,7 @@ class MiddlewareTests(UnpinningTestCase):
 
     def test_pin_on_cookie(self):
         """Thread should pin when the cookie is set."""
-        self.request.COOKIES[PINNING_COOKIE] = 'y'
+        self.request.COOKIES[pinning_cookie()] = 'y'
         self.middleware.process_request(self.request)
         assert this_thread_is_pinned()
 
@@ -146,27 +153,27 @@ class MiddlewareTests(UnpinningTestCase):
         self.request.method = 'GET'
         response = self.middleware.process_response(
             self.request, HttpResponse())
-        assert PINNING_COOKIE not in response.cookies
+        assert pinning_cookie() not in response.cookies
 
         self.request.method = 'POST'
         response = self.middleware.process_response(
             self.request, HttpResponse())
-        assert PINNING_COOKIE in response.cookies
-        eq_(response.cookies[PINNING_COOKIE]['max-age'],
-            PINNING_SECONDS)
-        eq_(response.cookies[PINNING_COOKIE]['samesite'],
-            PINNING_COOKIE_SAMESITE)
-        eq_(response.cookies[PINNING_COOKIE]['httponly'],
-            PINNING_COOKIE_HTTPONLY or '')
-        eq_(response.cookies[PINNING_COOKIE]['secure'],
-            PINNING_COOKIE_SECURE or '')
+        assert pinning_cookie() in response.cookies
+        eq_(response.cookies[pinning_cookie()]['max-age'],
+            pinning_seconds())
+        eq_(response.cookies[pinning_cookie()]['samesite'],
+            pinning_cookie_samesite())
+        eq_(response.cookies[pinning_cookie()]['httponly'],
+            pinning_cookie_httponly() or '')
+        eq_(response.cookies[pinning_cookie()]['secure'],
+            pinning_cookie_secure() or '')
 
     def test_attribute(self):
         """The cookie should get set if the _db_write attribute is True."""
         res = HttpResponse()
         res._db_write = True
         response = self.middleware.process_response(self.request, res)
-        assert PINNING_COOKIE in response.cookies
+        assert pinning_cookie() in response.cookies
 
     def test_db_write_decorator(self):
         """The @db_write decorator should make any view set the cookie."""
@@ -176,13 +183,13 @@ class MiddlewareTests(UnpinningTestCase):
         def view(req):
             return HttpResponse()
         response = self.middleware.process_response(req, view(req))
-        assert PINNING_COOKIE not in response.cookies
+        assert pinning_cookie() not in response.cookies
 
         @db_write
         def write_view(req):
             return HttpResponse()
         response = self.middleware.process_response(req, write_view(req))
-        assert PINNING_COOKIE in response.cookies
+        assert pinning_cookie() in response.cookies
 
 
 class UsePrimaryDBTests(TestCase):
