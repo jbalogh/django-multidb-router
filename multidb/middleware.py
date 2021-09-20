@@ -59,19 +59,9 @@ class PinningRouterMiddleware(MiddlewareMixin):
         """
         if (request.method not in READ_ONLY_METHODS or
                 getattr(response, '_db_write', False)):
-
-            # Older versions of Django don't support the SameSite attribute on
-            # cookies. If setting the cookie fails with a TypeError, then try
-            # setting the cookie without the samesite attribute.
-            try:
-                response.set_cookie(PINNING_COOKIE, value='y',
-                                    max_age=PINNING_SECONDS,
-                                    secure=PINNING_COOKIE_SECURE,
-                                    httponly=PINNING_COOKIE_HTTPONLY,
-                                    samesite=PINNING_COOKIE_SAMESITE)
-            except TypeError:
-                response.set_cookie(PINNING_COOKIE, value='y',
-                                    max_age=PINNING_SECONDS,
-                                    secure=PINNING_COOKIE_SECURE,
-                                    httponly=PINNING_COOKIE_HTTPONLY)
+            response.set_cookie(PINNING_COOKIE, value='y',
+                                max_age=PINNING_SECONDS,
+                                secure=PINNING_COOKIE_SECURE,
+                                httponly=PINNING_COOKIE_HTTPONLY,
+                                samesite=PINNING_COOKIE_SAMESITE)
         return response
