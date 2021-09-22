@@ -102,6 +102,17 @@ setting::
     MULTIDB_PINNING_COOKIE = 'multidb_pin_writes'
 
 
+You may also set the 'Secure', 'HttpOnly', and 'SameSite' cookie attributes by
+using the following settings. These settings are based on Django's settings for
+the session and CSRF cookies::
+
+    MULTIDB_PINNING_COOKIE_SECURE = False
+    MULTIDB_PINNING_COOKIE_HTTPONLY = False
+    MULTIDB_PINNING_COOKIE_SAMESITE = 'Lax'
+
+Note: the 'SameSite' attribute is only `available on django 2.1 and higher
+<https://docs.djangoproject.com/en/2.1/releases/2.1/>`_.
+
 ``use_primary_db``
 ==============
 
