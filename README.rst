@@ -114,7 +114,7 @@ Note: the 'SameSite' attribute is only `available on django 2.1 and higher
 <https://docs.djangoproject.com/en/2.1/releases/2.1/>`_.
 
 ``use_primary_db``
-==============
+==================
 
 ``multidb.pinning.use_primary_db`` is both a context manager and a decorator for
 wrapping code to use the primary database. You can use it as a context manager::
