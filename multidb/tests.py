@@ -20,7 +20,8 @@ from multidb.middleware import (pinning_cookie, pinning_cookie_httponly,
                                 pinning_cookie_samesite, pinning_cookie_secure,
                                 pinning_seconds, PinningRouterMiddleware)
 from multidb.pinning import (this_thread_is_pinned, pin_this_thread,
-                             unpin_this_thread, use_primary_db, db_write)
+                             unpin_this_thread, use_primary_db,
+                             use_secondary_db, db_write)
 
 
 class UnpinningTestCase(TestCase):
@@ -218,6 +219,22 @@ class UsePrimaryDBTests(TestCase):
         check_outer()
         assert not this_thread_is_pinned()
 
+    def test_decorator_nested_mixed(self):
+        @use_primary_db
+        def check_inner():
+            assert this_thread_is_pinned()
+
+        @use_secondary_db
+        def check_outer():
+            assert not this_thread_is_pinned()
+            check_inner()
+            assert not this_thread_is_pinned()
+
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        check_outer()
+        assert not this_thread_is_pinned()
+
     def test_decorator_resets(self):
         @use_primary_db
         def check():
@@ -243,6 +260,22 @@ class UsePrimaryDBTests(TestCase):
         check_outer()
         assert this_thread_is_pinned()
 
+    def test_decorator_resets_nested_mixed(self):
+        @use_primary_db
+        def check_inner():
+            assert this_thread_is_pinned()
+
+        @use_secondary_db
+        def check_outer():
+            assert not this_thread_is_pinned()
+            check_inner()
+            assert not this_thread_is_pinned()
+
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        check_outer()
+        assert this_thread_is_pinned()
+
     def test_context_manager(self):
         unpin_this_thread()
         assert not this_thread_is_pinned()
@@ -260,6 +293,16 @@ class UsePrimaryDBTests(TestCase):
             assert this_thread_is_pinned()
         assert not this_thread_is_pinned()
 
+    def test_context_manager_nested_mixed(self):
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        with use_secondary_db:
+            assert not this_thread_is_pinned()
+            with use_primary_db:
+                assert this_thread_is_pinned()
+            assert not this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+
     def test_context_manager_resets(self):
         pin_this_thread()
         assert this_thread_is_pinned()
@@ -275,6 +318,16 @@ class UsePrimaryDBTests(TestCase):
             with use_primary_db:
                 assert this_thread_is_pinned()
             assert this_thread_is_pinned()
+        assert this_thread_is_pinned()
+
+    def test_context_manager_resets_nested_mixed(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with use_secondary_db:
+            assert not this_thread_is_pinned()
+            with use_primary_db:
+                assert this_thread_is_pinned()
+            assert not this_thread_is_pinned()
         assert this_thread_is_pinned()
 
     def test_context_manager_exception(self):
@@ -332,6 +385,201 @@ class UsePrimaryDBTests(TestCase):
         thread1_lock.release()
         thread1.join()
         self.assertEqual(pinned[1], False)
+
+
+class UseSecondaryDBTests(TestCase):
+    def test_decorator(self):
+        @use_secondary_db
+        def check():
+            assert not this_thread_is_pinned()
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        check()
+        assert this_thread_is_pinned()
+
+    def test_decorator_nested(self):
+        @use_secondary_db
+        def check_inner():
+            assert not this_thread_is_pinned()
+
+        @use_secondary_db
+        def check_outer():
+            assert not this_thread_is_pinned()
+            check_inner()
+            assert not this_thread_is_pinned()
+
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        check_outer()
+        assert this_thread_is_pinned()
+
+    def test_decorator_nested_mixed(self):
+        @use_secondary_db
+        def check_inner():
+            assert not this_thread_is_pinned()
+
+        @use_primary_db
+        def check_outer():
+            assert this_thread_is_pinned()
+            check_inner()
+            assert this_thread_is_pinned()
+
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        check_outer()
+        assert this_thread_is_pinned()
+
+    def test_decorator_resets(self):
+        @use_secondary_db
+        def check():
+            assert not this_thread_is_pinned()
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        check()
+        assert not this_thread_is_pinned()
+
+    def test_decorator_resets_nested(self):
+        @use_secondary_db
+        def check_inner():
+            assert not this_thread_is_pinned()
+
+        @use_secondary_db
+        def check_outer():
+            assert not this_thread_is_pinned()
+            check_inner()
+            assert not this_thread_is_pinned()
+
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        check_outer()
+        assert not this_thread_is_pinned()
+
+    def test_decorator_resets_nested_mixed(self):
+        @use_secondary_db
+        def check_inner():
+            assert not this_thread_is_pinned()
+
+        @use_primary_db
+        def check_outer():
+            assert this_thread_is_pinned()
+            check_inner()
+            assert this_thread_is_pinned()
+
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        check_outer()
+        assert not this_thread_is_pinned()
+
+    def test_context_manager(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with use_secondary_db:
+            assert not this_thread_is_pinned()
+        assert this_thread_is_pinned()
+
+    def test_context_manager_nested(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with use_secondary_db:
+            assert not this_thread_is_pinned()
+            with use_secondary_db:
+                assert not this_thread_is_pinned()
+            assert not this_thread_is_pinned()
+        assert this_thread_is_pinned()
+
+    def test_context_manager_nested_mixed(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with use_primary_db:
+            assert this_thread_is_pinned()
+            with use_secondary_db:
+                assert not this_thread_is_pinned()
+            assert this_thread_is_pinned()
+        assert this_thread_is_pinned()
+
+    def test_context_manager_resets(self):
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        with use_secondary_db:
+            assert not this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+
+    def test_context_manager_resets_nested(self):
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        with use_secondary_db:
+            assert not this_thread_is_pinned()
+            with use_secondary_db:
+                assert not this_thread_is_pinned()
+            assert not this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+
+    def test_context_manager_resets_nested_mixed(self):
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        with use_primary_db:
+            assert this_thread_is_pinned()
+            with use_secondary_db:
+                assert not this_thread_is_pinned()
+            assert this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+
+    def test_context_manager_exception(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with self.assertRaises(ValueError):
+            with use_secondary_db:
+                assert not this_thread_is_pinned()
+                raise ValueError
+        assert this_thread_is_pinned()
+
+    def test_multithreaded_unpinning(self):
+        thread1_lock = Lock()
+        thread2_lock = Lock()
+        thread1_lock.acquire()
+        thread2_lock.acquire()
+        orchestrator = Lock()
+        orchestrator.acquire()
+
+        pinned = {}
+
+        def thread1_worker():
+            pin_this_thread()
+            with use_secondary_db:
+                orchestrator.release()
+                thread1_lock.acquire()
+
+            pinned[1] = this_thread_is_pinned()
+
+        def thread2_worker():
+            unpin_this_thread()
+            with use_secondary_db:
+                orchestrator.release()
+                thread2_lock.acquire()
+
+            pinned[2] = this_thread_is_pinned()
+            orchestrator.release()
+
+        thread1 = Thread(target=thread1_worker)
+        thread2 = Thread(target=thread2_worker)
+
+        # thread1 starts, entering `use_primary_db` from a pinned state
+        thread1.start()
+        orchestrator.acquire()
+
+        # thread2 starts, entering `use_primary_db` from an unpinned state
+        thread2.start()
+        orchestrator.acquire()
+
+        # thread2 finishes, returning to an unpinned state
+        thread2_lock.release()
+        thread2.join()
+        self.assertEqual(pinned[2], False)
+
+        # thread1 finishes, returning to a pinned state
+        thread1_lock.release()
+        thread1.join()
+        self.assertEqual(pinned[1], True)
 
 
 class DeprecationTestCase(TestCase):

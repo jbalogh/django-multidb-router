@@ -7,7 +7,7 @@ import warnings
 
 
 __all__ = ['this_thread_is_pinned', 'pin_this_thread', 'unpin_this_thread',
-           'use_primary_db', 'use_master', 'db_write']
+           'use_primary_db', 'use_secondary_db', 'use_master', 'db_write']
 
 
 _locals = threading.local()
@@ -33,8 +33,8 @@ def unpin_this_thread():
     _locals.pinned = False
 
 
-class UsePrimaryDB(object):
-    """A contextmanager/decorator to use the primary database."""
+class _UseDB(object):
+    """A contextmanager/decorator to use the specified database."""
     def __call__(self, func):
         @wraps(func)
         def decorator(*args, **kw):
@@ -45,11 +45,27 @@ class UsePrimaryDB(object):
     def __enter__(self):
         _locals.old = getattr(_locals, 'old', [])
         _locals.old.append(this_thread_is_pinned())
-        pin_this_thread()
 
     def __exit__(self, type, value, tb):
-        if not _locals.old.pop():
+        previous_state = _locals.old.pop()
+        if previous_state:
+            pin_this_thread()
+        else:
             unpin_this_thread()
+
+
+class UsePrimaryDB(_UseDB):
+    """A contextmanager/decorator to use the primary database."""
+    def __enter__(self):
+        super(UsePrimaryDB, self).__enter__()
+        pin_this_thread()
+
+
+class UseSecondaryDB(_UseDB):
+    """A contextmanager/decorator to use the secondary database."""
+    def __enter__(self):
+        super(UseSecondaryDB, self).__enter__()
+        unpin_this_thread()
 
 
 class DeprecatedUseMaster(UsePrimaryDB):
@@ -63,6 +79,7 @@ class DeprecatedUseMaster(UsePrimaryDB):
 
 
 use_primary_db = UsePrimaryDB()
+use_secondary_db = UseSecondaryDB()
 use_master = DeprecatedUseMaster()
 
 
