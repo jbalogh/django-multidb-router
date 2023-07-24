@@ -124,9 +124,13 @@ class MiddlewareTests(UnpinningTestCase):
     def setUp(self):
         super(MiddlewareTests, self).setUp()
 
+        # Django 4.0 requires response as an arg
+        # https://stackoverflow.com/questions/62944755/how-to-unittest-new-style-django-middleware
+        get_response = mock.MagicMock()
+
         # Every test uses these, so they're okay as attrs.
         self.request = HttpRequest()
-        self.middleware = PinningRouterMiddleware()
+        self.middleware = PinningRouterMiddleware(get_response)
 
     def test_pin_on_cookie(self):
         """Thread should pin when the cookie is set."""
