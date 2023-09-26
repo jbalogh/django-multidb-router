@@ -13,9 +13,9 @@ usage() {
 
 case "$1" in
     "test" )
-        django-admin.py test multidb ;;
+        django-admin test multidb ;;
     "shell" )
-        django-admin.py shell ;;
+        django-admin shell ;;
     "check" )
         flake8 multidb ;;
     * )

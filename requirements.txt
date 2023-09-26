@@ -1,2 +1,2 @@
-django-nose==1.4.4
-flake8==3.3.0
+django-nose==1.4.7
+flake8==6.0.0
