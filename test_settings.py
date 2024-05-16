@@ -1,8 +1,6 @@
 # A Django settings module to support the tests
 
 SECRET_KEY = 'dummy'
-# TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
-
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware'
