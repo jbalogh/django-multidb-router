@@ -1,7 +1,7 @@
 django-multidb-router
 =====================
 
-.. image:: https://img.shields.io/github/workflow/status/jbalogh/django-multidb-router/CI?label=CI&logo=github&branch=master
+.. image:: https://img.shields.io/github/actions/workflow/status/jbalogh/django-multidb-router/ci.yml?branch=master
     :alt: Build Status
     :target: https://github.com/jbalogh/django-multidb-router/actions?query=workflow%3ACI
 
