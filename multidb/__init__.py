@@ -139,8 +139,8 @@ class PinningReplicaRouter(ReplicaRouter):
 
     """
     def db_for_read(self, model, **hints):
-        """Send reads to replicas in round-robin unless this thread is "stuck" to
-        the master."""
+        """Send reads to replicas in round-robin unless this thread is
+        "stuck" to the master."""
         return DEFAULT_DB_ALIAS if this_thread_is_pinned() else get_replica()
 
 
