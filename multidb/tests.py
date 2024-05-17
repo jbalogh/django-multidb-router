@@ -220,6 +220,22 @@ class UsePrimaryDBTests(TestCase):
         check()
         assert not this_thread_is_pinned()
 
+    def test_decorator_nested(self):
+        @use_primary_db
+        def check_inner():
+            assert this_thread_is_pinned()
+
+        @use_primary_db
+        def check_outer():
+            assert this_thread_is_pinned()
+            check_inner()
+            assert this_thread_is_pinned()
+
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        check_outer()
+        assert not this_thread_is_pinned()
+
     def test_decorator_resets(self):
         @use_primary_db
         def check():
@@ -230,6 +246,22 @@ class UsePrimaryDBTests(TestCase):
         check()
         assert this_thread_is_pinned()
 
+    def test_decorator_resets_nested(self):
+        @use_primary_db
+        def check_inner():
+            assert this_thread_is_pinned()
+
+        @use_primary_db
+        def check_outer():
+            assert this_thread_is_pinned()
+            check_inner()
+            assert this_thread_is_pinned()
+
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        check_outer()
+        assert this_thread_is_pinned()
+
     def test_context_manager(self):
         unpin_this_thread()
         assert not this_thread_is_pinned()
@@ -237,10 +269,30 @@ class UsePrimaryDBTests(TestCase):
             assert this_thread_is_pinned()
         assert not this_thread_is_pinned()
 
+    def test_context_manager_nested(self):
+        unpin_this_thread()
+        assert not this_thread_is_pinned()
+        with use_primary_db:
+            assert this_thread_is_pinned()
+            with use_primary_db:
+                assert this_thread_is_pinned()
+            assert this_thread_is_pinned()
+        assert not this_thread_is_pinned()
+
     def test_context_manager_resets(self):
         pin_this_thread()
         assert this_thread_is_pinned()
         with use_primary_db:
+            assert this_thread_is_pinned()
+        assert this_thread_is_pinned()
+
+    def test_context_manager_resets_nested(self):
+        pin_this_thread()
+        assert this_thread_is_pinned()
+        with use_primary_db:
+            assert this_thread_is_pinned()
+            with use_primary_db:
+                assert this_thread_is_pinned()
             assert this_thread_is_pinned()
         assert this_thread_is_pinned()
 
