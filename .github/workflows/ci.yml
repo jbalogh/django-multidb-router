@@ -12,28 +12,11 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-          - python: 3.8
-            toxenv: py38-3.2.X
-          - python: 3.8
-            toxenv: py38-4.0.X
-          - python: 3.8
-            toxenv: py38-4.2.X
-         
-          - python: 3.9
-            toxenv: py39-3.2.X
-          - python: 3.9
-            toxenv: py39-4.0.X
           - python: 3.9
             toxenv: py39-4.2.X
         
           - python: "3.10"
-            toxenv: py310-3.2.X
-          - python: "3.10"
-            toxenv: py310-4.0.X
-          - python: "3.10"
             toxenv: py310-4.2.X
-          - python: "3.10"
-            toxenv: py310-5.0.X
           - python: "3.10"
             toxenv: py310-5.1.X
           - python: "3.10"
@@ -42,16 +25,12 @@ jobs:
           - python: "3.11"
             toxenv: py311-4.2.X
           - python: "3.11"
-            toxenv: py311-5.0.X
-          - python: "3.11"
             toxenv: py311-5.1.X
           - python: "3.11"
             toxenv: py311-5.2.X
 
           - python: "3.12"
             toxenv: py312-4.2.X
-          - python: "3.12"
-            toxenv: py312-5.0.X
           - python: "3.12"
             toxenv: py312-5.1.X
           - python: "3.12"
