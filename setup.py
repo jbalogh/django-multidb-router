@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-multidb-router',
-    version='0.10',
+    version='0.11',
     description='Round-robin multidb router for Django.',
     long_description=open('README.rst').read(),
     author='Jeff Balogh',

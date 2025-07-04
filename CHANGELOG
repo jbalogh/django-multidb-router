@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+Version 0.11
+-----------
+
+- Drop support for Python 3.8 #64
+- Drop support for Django 3.2, 4.0, 4.1, 5.0 #64
+- Confirm support for Python 3.11, 3.12, 3.13 #63
+- Confirm support for Django 5.0, 5.1, 5.2 #63
+- Update CI badge #60
+- Remove django-nose completely #59
+- Confirm support for Python 3.10 #58
+- Confirm support for Django 4.0, 4.1, 4.2 #58
+- Fix Trove classifiers & minimum Django version #55
+
 Version 0.10
 ------------
 
