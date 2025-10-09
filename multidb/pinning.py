@@ -34,7 +34,7 @@ def unpin_this_thread():
 
 
 class UsePrimaryDB(object):
-    """A contextmanager/decorator to use the master database."""
+    """A contextmanager/decorator to use the primary database."""
     def __call__(self, func):
         @wraps(func)
         def decorator(*args, **kw):
@@ -43,11 +43,12 @@ class UsePrimaryDB(object):
         return decorator
 
     def __enter__(self):
-        _locals.old = this_thread_is_pinned()
+        _locals.old = getattr(_locals, 'old', [])
+        _locals.old.append(this_thread_is_pinned())
         pin_this_thread()
 
     def __exit__(self, type, value, tb):
-        if not _locals.old:
+        if not _locals.old.pop():
             unpin_this_thread()
 
 
